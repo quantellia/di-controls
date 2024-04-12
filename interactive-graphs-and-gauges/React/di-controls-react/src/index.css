@@ -1,0 +1,17 @@
+.root {
+  width: 1500px;
+}
+
+.column {
+  float: left;
+  width: 33%;
+}
+
+.chart {
+  height: 300px;
+  width: 500px;
+}
+
+.slider {
+  width: 95%;
+}
