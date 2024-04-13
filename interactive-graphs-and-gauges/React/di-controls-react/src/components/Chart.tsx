@@ -11,7 +11,8 @@ interface ChartProps {
   yAxisData: Array<number>;
   yAxisLabel: string;
   tooltip: TooltipObj | undefined;
-  setCurrentValue: React.Dispatch<React.SetStateAction<number>>;
+  currentValue: Array<number>;
+  setCurrentValue: React.Dispatch<React.SetStateAction<Array<number>>>;
 }
 
 if (typeof Highcharts === "object") {
@@ -25,6 +26,7 @@ function Chart({
   yAxisData,
   yAxisLabel,
   tooltip,
+  currentValue,
   setCurrentValue,
 }: ChartProps) {
   const yMax = Math.max(...yAxisData);
@@ -97,8 +99,12 @@ function Chart({
           },
 
           tooltip: {
-            formatter: tooltip?.formatter ?? defaultTooltip.formatter,
-            positioner: tooltip?.positioner ?? defaultTooltip.positioner,
+            formatter: function () {
+              const x: number = Math.round(this.x);
+              const y: number = Math.round(this.y);
+              return tooltip?.message(x, y);
+            },
+            positioner: tooltip?.position ?? defaultTooltip.positioner,
             shadow: false,
             backgroundColor: "rgba(255,255,255,0.6)",
             crosshairs: [true, true],
@@ -110,9 +116,26 @@ function Chart({
               cursor: "ns-resize",
               point: {
                 events: {
-                  // drag: ,
-                  // drop: ,
-                  // update: ,
+                  drag: function (e) {
+                    if (e.newPoint) {
+                      const newValues = currentValue.map((v, i) =>
+                        i === e.newPoints[this.id].point.x
+                          ? Math.floor(e.newPoint.y)
+                          : v
+                      );
+                      setCurrentValue(newValues);
+                    }
+                  },
+                  update: function (e) {
+                    if (e.newPoint) {
+                      const newValues = currentValue.map((v, i) =>
+                        i === e.newPoints[this.id].point.x
+                          ? Math.floor(e.newPoint.y)
+                          : v
+                      );
+                      setCurrentValue(newValues);
+                    }
+                  },
                 },
               },
               stickyTracking: false,

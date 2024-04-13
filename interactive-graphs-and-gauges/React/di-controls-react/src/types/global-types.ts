@@ -1,6 +1,6 @@
 interface TooltipObj {
-  formatter: () => void;
-  positioner: () => void;
+  message: (xAxisData: number, yAxisData: number) => string;
+  position: () => { x: number; y: number };
 }
 
 export type { TooltipObj };

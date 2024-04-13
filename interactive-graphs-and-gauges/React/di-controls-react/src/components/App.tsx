@@ -1,21 +1,46 @@
+import { useState } from "react";
 import Chart from "./Chart";
 import Gauge from "./Gauge";
-import "../index.css";
 import Slider from "./Slider";
-import { useState } from "react";
+import "../index.css";
+
+function roundToNearest(value: number, target: number) {
+  return value - (value % target);
+}
 
 function App() {
   const [investment, setInvestment] = useState(5000);
   const [costPerHour, setCostPerHour] = useState(100);
   const [skillLevel, setSkillLevel] = useState(50);
   const [costOfDelay, setCostOfDelay] = useState(5000);
-  const [skillBenefit, setSkillBenefit] = useState(3);
-  const [projectDelay, setProjectDelay] = useState(0);
+  const [skillBenefitValues, setSkillBenefitValues] = useState([
+    10, 9, 8, 8, 4, 3, 2, 2, 1, 1, 1,
+  ]);
+  const [projectDelayValues, setProjectDelayValues] = useState([
+    0, 1, 2, 3, 5, 7, 9, 20, 30, 40,
+  ]);
   const hoursPurchased = Math.floor(investment / costPerHour);
+  const skillLevelImprovement =
+    skillBenefitValues[roundToNearest(skillLevel, 10) / 10];
+  const skillImprovementScore = skillLevelImprovement * hoursPurchased;
+  const daysDelayed =
+    projectDelayValues[
+      Math.floor(roundToNearest(skillImprovementScore, 1000) / 1000)
+    ];
+  const totalInvestmentBenefit = daysDelayed * costOfDelay;
+  const investmentDelta = totalInvestmentBenefit - investment;
 
-  const modelText = `By investing $${investment} in training that costs $${costPerHour} per hour, ${Math.floor(
-    hoursPurchased
-  )} training hours can be purchased.  Since the average skill level of the workforce before the investment is ${skillLevel} (on a scale of 1-100), this can produce a skill level improvement of `;
+  const modelText = `By investing $${investment} in training that costs $${costPerHour} per hour, 
+  ${Math.floor(hoursPurchased)} training hours can be purchased. 
+  Since the average skill level of the workforce before the investment is ${skillLevel} (on a scale of 1-100), 
+  this can produce a skill level improvement of ${skillLevelImprovement} 
+  (as measured on an assessment test with a scale of 1-10) for every training hour purchased,
+  resulting in a total predicted skills improvement score of ${skillImprovementScore}. 
+  Analysis of our historical data shows that this will avoid, on average, ${daysDelayed} days of project delay. 
+  Project delay days cost the company, on average, $${costOfDelay} each.  
+  This means that the expected benefit from the $${investment} initial investment is $${totalInvestmentBenefit}, 
+  representing a net ${investmentDelta >= 0 ? "return" : "loss"} 
+  of $${Math.abs(investmentDelta)}.`;
 
   return (
     <div className="root">
@@ -57,74 +82,66 @@ function App() {
       <div className="column">
         <Gauge
           title="Training Hours Purchased"
-          maxValue={250}
+          maxValue={500}
           value={hoursPurchased}
-          displayValue="{point.y:,.0f}"
+          displayValue={`${hoursPurchased}`}
           measure="Hours"
         />
         <Gauge
           title="Total skills improvement"
           maxValue={5000}
-          value={skillBenefit}
-          displayValue="{point.y:,.0f}"
+          value={skillImprovementScore}
+          displayValue={`${skillImprovementScore}`}
           measure="Skill Improvement"
         />
         <Gauge
           title="Reduction in Project Delay"
           maxValue={50}
-          value={projectDelay}
-          displayValue="{point.y:,.0f}"
+          value={daysDelayed}
+          displayValue={`${daysDelayed}`}
           measure="Days Faster"
         />
       </div>
       <div className="column">
         <Chart
           title="Skill level->Benefit of training hr"
-          xAxisData={Array.from({ length: 100 }, (v, k) => k * 10)}
-          yAxisData={[10, 9, 8, 8, 4, 3, 2, 2, 1, 1, 1]}
+          xAxisData={Array.from({ length: 100 }, (_v, k) => k * 10)}
+          yAxisData={skillBenefitValues}
           yAxisLabel="Benefit"
           tooltip={{
-            formatter: function () {
-              const x: number = Math.round(this.x);
-              const y: number = Math.round(this.y);
-              return (
-                "At skill level " + x + ",<br />1 training hr=benefit lvl " + y
-              );
+            message: function (xAxisData, yAxisData) {
+              return `At skill level ${xAxisData},<br />
+                1 training hr=benefit lvl ${yAxisData}`;
             },
-            positioner: function () {
+            position: function () {
               return { x: 256, y: 0 };
             },
           }}
-          setCurrentValue={setSkillBenefit}
+          currentValue={skillBenefitValues}
+          setCurrentValue={setSkillBenefitValues}
         />
         <Chart
           title="Skills improvement->proj delay reduction"
-          xAxisData={Array.from({ length: 10 }, (v, k) => k * 1000)}
-          yAxisData={[0, 1, 2, 3, 5, 7, 9, 20, 30, 40]}
+          xAxisData={Array.from({ length: 10 }, (_v, k) => k * 1000)}
+          yAxisData={projectDelayValues}
           yAxisLabel="Days"
           tooltip={{
-            formatter: function () {
-              const x: number = Math.round(this.x);
-              const y: number = Math.round(this.y);
-              return (
-                "With skill improvement of " +
-                x +
-                ",<br />" +
-                y +
-                " fewer days proj delay expected"
-              );
+            message: function (xAxisData, yAxisData) {
+              return `With skill improvement of ${xAxisData},<br/>
+                ${yAxisData} fewer days proj delay expected`;
             },
-            positioner: function () {
+            position: function () {
               return { x: 40, y: 24 };
             },
           }}
-          setCurrentValue={setProjectDelay}
+          currentValue={projectDelayValues}
+          setCurrentValue={setProjectDelayValues}
         />
         <Gauge
-          title="Total investment benefit"
+          title="Total Investment Benefit"
           maxValue={10000}
-          value={80}
-          displayValue="${point.y:,.0f}"
+          value={totalInvestmentBenefit}
+          displayValue={`$${totalInvestmentBenefit}`}
           measure=""
         />
       </div>
