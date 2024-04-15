@@ -100,7 +100,9 @@ function Chart({
 
           tooltip: {
             formatter: function () {
+              // @ts-expect-error this.x is jank JS built into highcharts
               const x: number = Math.round(this.x);
+              // @ts-expect-error this.h is jank JS built into highcharts
               const y: number = Math.round(this.y);
               return tooltip?.message(x, y);
             },
@@ -116,9 +118,13 @@ function Chart({
               cursor: "ns-resize",
               point: {
                 events: {
-                  drag: function (e) {
+                  drag: function (e: {
+                    newPoint: { y: number };
+                    newPoints: { [x: string]: { point: { x: number } } };
+                  }) {
                     if (e.newPoint) {
                       const newValues = currentValue.map((v, i) =>
+                        // @ts-expect-error this.id is jank JS built into highcharts
                         i === e.newPoints[this.id].point.x
                           ? Math.floor(e.newPoint.y)
                           : v
@@ -126,9 +132,13 @@ function Chart({
                       setCurrentValue(newValues);
                     }
                   },
-                  update: function (e) {
+                  update: function (e: {
+                    newPoint: { y: number };
+                    newPoints: { [x: string]: { point: { x: number } } };
+                  }) {
                     if (e.newPoint) {
                       const newValues = currentValue.map((v, i) =>
+                        // @ts-expect-error this.id is jank JS built into highcharts
                         i === e.newPoints[this.id].point.x
                           ? Math.floor(e.newPoint.y)
                           : v

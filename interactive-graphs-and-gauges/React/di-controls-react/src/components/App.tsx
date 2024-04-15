@@ -78,6 +78,13 @@ function App() {
           setCurrentValue={setCostOfDelay}
         />
         <p>{modelText}</p>
+        <Gauge
+          title="Total Revenue"
+          maxValue={10000}
+          value={investmentDelta}
+          displayValue={`${investmentDelta}`}
+          measure=""
+        />
       </div>
       <div className="column">
         <Gauge
@@ -109,9 +116,9 @@ function App() {
           yAxisData={skillBenefitValues}
           yAxisLabel="Benefit"
           tooltip={{
-            message: function (xAxisData, yAxisData) {
-              return `At skill level ${xAxisData},<br />
-                1 training hr=benefit lvl ${yAxisData}`;
+            message: function (currentX, currentY) {
+              return `At skill level ${currentX},<br />
+                1 training hr=benefit lvl ${currentY}`;
             },
             position: function () {
               return { x: 256, y: 0 };
@@ -126,9 +133,9 @@ function App() {
           yAxisData={projectDelayValues}
           yAxisLabel="Days"
           tooltip={{
-            message: function (xAxisData, yAxisData) {
-              return `With skill improvement of ${xAxisData},<br/>
-                ${yAxisData} fewer days proj delay expected`;
+            message: function (currentX, currentY) {
+              return `With skill improvement of ${currentX},<br/>
+                ${currentY} fewer days proj delay expected`;
             },
             position: function () {
               return { x: 40, y: 24 };
