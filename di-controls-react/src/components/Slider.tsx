@@ -12,7 +12,7 @@ interface SliderProps {
 
 function Slider({
   title,
-  styling = "slider",
+  styling = "styled-slider",
   min,
   max,
   step,
