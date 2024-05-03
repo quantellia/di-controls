@@ -12,12 +12,38 @@ interface DraggablePieChartProps {
 
 function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
   const graphRef: MutableRefObject<string> = useRef();
+  const handlesRef: MutableRefObject<string> = useRef();
   const [currentTotal] = useState(
     data.reduce((accumulator, slice) => accumulator + slice.value, 0)
   );
   const total = compensate
     ? data.reduce((accumulator, slice) => accumulator + slice.value, 0)
     : 0;
+
+  const width = 500;
+  const height = width;
+  const color = d3
+    .scaleOrdinal()
+    .domain(data.map((d) => d.name))
+    .range(
+      d3
+        .quantize((t) => d3.interpolateSpectral(t * 0.8 + 0.1), data.length)
+        .reverse()
+    );
+  const arc = d3
+    .arc()
+    .innerRadius(Math.min(width, height) / 3.5 - 1)
+    .outerRadius(Math.min(width, height) / 2 - 1);
+  const arcHandle = d3
+    .arc()
+    .innerRadius(arc.outerRadius())
+    .outerRadius(arc.outerRadius());
+  const pie = d3
+    .pie()
+    .sort(null)
+    .value((d) => d.value);
+
+  const arcs = pie(data);
 
   useEffect(() => {
     if (compensate) {
@@ -27,31 +53,8 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       });
     }
 
-    const width = 500;
-    const height = width;
-    const color = d3
-      .scaleOrdinal()
-      .domain(data.map((d) => d.name))
-      .range(
-        d3
-          .quantize((t) => d3.interpolateSpectral(t * 0.8 + 0.1), data.length)
-          .reverse()
-      );
-    const pie = d3
-      .pie()
-      .sort(null)
-      .value((d) => d.value);
-    const arc = d3
-      .arc()
-      .innerRadius(Math.min(width, height) / 3.5 - 1)
-      .outerRadius(Math.min(width, height) / 2 - 1);
     const labelRadius = arc.outerRadius()() * 0.8;
     const arcLabel = d3.arc().innerRadius(labelRadius).outerRadius(labelRadius);
-    const arcHandle = d3
-      .arc()
-      .innerRadius(arc.outerRadius())
-      .outerRadius(arc.outerRadius());
-    const arcs = pie(data);
 
     const svg = d3
       .select(graphRef.current)
@@ -100,6 +103,26 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           .attr("fill-opacity", 0.7)
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
+    console.log(total);
+  }, [data]);
+
+  useEffect(() => {
+    var x = 0;
+    var y = 0;
+    const svg = d3
+      .select(handlesRef.current)
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [
+        -(width * 1.1) / 2,
+        -(height * 1.1) / 2,
+        width * 1.1,
+        height * 1.1,
+      ])
+      .attr(
+        "style",
+        `max-width: 100%; height: auto; font: 10px sans-serif; position: relative; left: -${width}px`
+      );
     svg
       .append("g")
       .attr("handle-anchor", "middle")
@@ -109,21 +132,26 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       .attr("transform", (d) => `translate(${arcHandle.centroid(d)})`)
       .call((circle) =>
         circle
-          .attr("cx", 0)
-          .attr("cy", 0)
+          // .attr("cx", x)
+          // .attr("cy", y)
           .attr("r", 20)
           .attr("fill", (d) => color(d.data.name))
           .attr("stroke", "white")
+          .call(
+            d3.drag().on("drag", (e) => {
+              circle.attr("cx", e.x);
+              circle.attr("cy", e.y);
+              console.log(`${x}, ${y}`);
+            })
+          )
       );
-    // svg
-    //   .append("circle")
-    //   .attr("cx", width / 4)
-    //   .attr("cy", height / 4)
-    //   .attr("r", 20)
-    //   .style("fill", "green");
-    console.log(total);
-  }, [data]);
-  return <svg ref={graphRef}></svg>;
+  }, []);
+  return (
+    <>
+      <svg ref={graphRef}></svg>
+      <svg ref={handlesRef}></svg>
+    </>
+  );
 }
 
 export default DraggablePieChart;
