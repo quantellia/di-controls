@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useEffect, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 
 interface DraggablePieChartProps {
   data: Array<{
@@ -11,7 +11,7 @@ interface DraggablePieChartProps {
 }
 
 function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
-  const ref = useRef("default");
+  const graphRef: MutableRefObject<string> = useRef();
   const [currentTotal] = useState(
     data.reduce((accumulator, slice) => accumulator + slice.value, 0)
   );
@@ -28,7 +28,7 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
     }
 
     const width = 500;
-    const height = Math.min(width, 500);
+    const height = width;
     const color = d3
       .scaleOrdinal()
       .domain(data.map((d) => d.name))
@@ -47,14 +47,26 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       .outerRadius(Math.min(width, height) / 2 - 1);
     const labelRadius = arc.outerRadius()() * 0.8;
     const arcLabel = d3.arc().innerRadius(labelRadius).outerRadius(labelRadius);
+    const arcHandle = d3
+      .arc()
+      .innerRadius(arc.outerRadius())
+      .outerRadius(arc.outerRadius());
     const arcs = pie(data);
 
     const svg = d3
-      .select(ref.current)
+      .select(graphRef.current)
       .attr("width", width)
       .attr("height", height)
-      .attr("viewBox", [-width / 2, -height / 2, width, height])
+      .attr("viewBox", [
+        -(width * 1.1) / 2,
+        -(height * 1.1) / 2,
+        width * 1.1,
+        height * 1.1,
+      ])
       .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
+
+    svg.selectAll("g").remove();
+
     svg
       .append("g")
       .attr("stroke", "white")
@@ -88,9 +100,30 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           .attr("fill-opacity", 0.7)
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
+    svg
+      .append("g")
+      .attr("handle-anchor", "middle")
+      .selectAll()
+      .data(arcs)
+      .join("circle")
+      .attr("transform", (d) => `translate(${arcHandle.centroid(d)})`)
+      .call((circle) =>
+        circle
+          .attr("cx", 0)
+          .attr("cy", 0)
+          .attr("r", 20)
+          .attr("fill", (d) => color(d.data.name))
+          .attr("stroke", "white")
+      );
+    // svg
+    //   .append("circle")
+    //   .attr("cx", width / 4)
+    //   .attr("cy", height / 4)
+    //   .attr("r", 20)
+    //   .style("fill", "green");
     console.log(total);
   }, [data]);
-  return <svg ref={ref}></svg>;
+  return <svg ref={graphRef}></svg>;
 }
 
 export default DraggablePieChart;

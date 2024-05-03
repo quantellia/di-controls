@@ -1,5 +1,5 @@
 import { useState } from "react";
-import DraggableChart from "./components/DraggableCharts";
+import DraggablePieChart from "./components/DraggableCharts";
 import Slider from "./components/Slider";
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
 
   return (
     <>
-      <DraggableChart data={graphValues} compensate={true} />
+      <DraggablePieChart data={graphValues} compensate={true} />
       <p>
         {graphValues.map((slice) => (
           <Slider
