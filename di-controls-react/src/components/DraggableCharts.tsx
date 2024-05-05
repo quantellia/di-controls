@@ -34,10 +34,6 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
     .arc()
     .innerRadius(Math.min(width, height) / 3.5 - 1)
     .outerRadius(Math.min(width, height) / 2 - 1);
-  const arcHandle = d3
-    .arc()
-    .innerRadius(arc.outerRadius())
-    .outerRadius(arc.outerRadius());
   const pie = d3
     .pie()
     .sort(null)
@@ -49,7 +45,8 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
     if (compensate) {
       const delta = total - currentTotal;
       data.forEach((slice) => {
-        slice.set(Math.floor(slice.value - delta / data.length));
+        if (delta !== 0)
+          slice.set(Math.floor(slice.value - delta / data.length));
       });
     }
 
@@ -103,12 +100,9 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           .attr("fill-opacity", 0.7)
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
-    console.log(total);
-  }, [data]);
+  }, [arc, arcs, color, compensate, currentTotal, data, height, total]);
 
   useEffect(() => {
-    var x = 0;
-    var y = 0;
     const svg = d3
       .select(handlesRef.current)
       .attr("width", width)
@@ -123,29 +117,39 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
         "style",
         `max-width: 100%; height: auto; font: 10px sans-serif; position: relative; left: -${width}px`
       );
-    svg
-      .append("g")
-      .attr("handle-anchor", "middle")
-      .selectAll()
-      .data(arcs)
-      .join("circle")
-      .attr("transform", (d) => `translate(${arcHandle.centroid(d)})`)
-      .call((circle) =>
-        circle
-          // .attr("cx", x)
-          // .attr("cy", y)
-          .attr("r", 20)
-          .attr("fill", (d) => color(d.data.name))
-          .attr("stroke", "white")
-          .call(
+
+    svg.selectAll("circle").remove();
+
+    arcs.forEach((slice, index) => {
+      svg
+        .append("circle")
+        .attr("cy", -(width / 2) * Math.cos(slice.endAngle))
+        .attr("cx", (height / 2) * Math.sin(slice.endAngle))
+        .attr("r", 20)
+        .attr("fill", color(data[index].name))
+        .attr("stroke", "white")
+        .call((circle) =>
+          circle.call(
+            // @ts-expect-error jank typing weirdness built into d3
             d3.drag().on("drag", (e) => {
-              circle.attr("cx", e.x);
-              circle.attr("cy", e.y);
-              console.log(`${x}, ${y}`);
+              const mouseAngle = Math.atan(e.x / e.y);
+              circle.attr(
+                "cy",
+                Math.sign(e.y) * (width / 2) * Math.cos(mouseAngle)
+              );
+              circle.attr(
+                "cx",
+                Math.sign(e.y) * (height / 2) * Math.sin(mouseAngle)
+              );
+              let mouseAngle360 =
+                mouseAngle > 0 ? Math.PI - mouseAngle : Math.abs(mouseAngle);
+              mouseAngle360 = e.x < 0 ? Math.PI + mouseAngle360 : mouseAngle360;
+              data[index].set(total * (mouseAngle360 / (2 * Math.PI)));
             })
           )
-      );
-  }, []);
+        );
+    });
+  }, [arcs]);
   return (
     <>
       <svg ref={graphRef}></svg>
