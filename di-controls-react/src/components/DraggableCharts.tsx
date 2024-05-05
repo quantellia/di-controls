@@ -144,7 +144,10 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
               let mouseAngle360 =
                 mouseAngle > 0 ? Math.PI - mouseAngle : Math.abs(mouseAngle);
               mouseAngle360 = e.x < 0 ? Math.PI + mouseAngle360 : mouseAngle360;
-              data[index].set(total * (mouseAngle360 / (2 * Math.PI)));
+              const sliceStartValue =
+                total * (arcs[index].startAngle / (2 * Math.PI));
+              const sliceEndValue = total * (mouseAngle360 / (2 * Math.PI));
+              data[index].set(sliceEndValue - sliceStartValue);
             })
           )
         );
