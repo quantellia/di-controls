@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { MutableRefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 interface DraggablePieChartProps {
   data: Array<{
@@ -11,8 +11,8 @@ interface DraggablePieChartProps {
 }
 
 function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
-  const graphRef: MutableRefObject<string> = useRef();
-  const handlesRef: MutableRefObject<string> = useRef();
+  const graphRef = useRef("graph");
+  const handlesRef = useRef("handles");
   const [currentManipulatedIndex, setCurrentManipulatedIndex] = useState(0);
   const [currentTotal] = useState(
     data.reduce((accumulator, slice) => accumulator + slice.value, 0)
@@ -40,8 +40,10 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
   const pie = d3
     .pie()
     .sort(null)
+    //@ts-expect-error d.data is not a number, it's an object the same as "slice"
     .value((d) => d.value);
 
+  //@ts-expect-error pie() accepts our data and molds further functions that use the data generated to the datatypes within data
   const arcs = pie(data);
 
   useEffect(() => {
@@ -56,6 +58,7 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           );
       });
     }
+    // @ts-expect-error 'd' doesn't need to be provided to outerRadius() in this context, blame the library
     const labelRadius = arc.outerRadius()() * 0.8;
     const arcLabel = d3.arc().innerRadius(labelRadius).outerRadius(labelRadius);
 
@@ -79,9 +82,12 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       .selectAll()
       .data(arcs)
       .join("path")
+      // @ts-expect-error color() never returns unknown, it's jank typing built into d3
       .attr("fill", (d) => color(d.data.name))
+      // @ts-expect-error I don't even know why this works but that's untyped javascript for you
       .attr("d", arc)
       .append("title")
+      //@ts-expect-error d.data is not a number, it's an object the same as "slice"
       .text((d) => `${d.data.name}: ${d.data.value.toLocaleString("en-US")}`);
     svg
       .append("g")
@@ -89,12 +95,14 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       .selectAll()
       .data(arcs)
       .join("text")
+      // @ts-expect-error mfw d3's own types don't match with what it accepts
       .attr("transform", (d) => `translate(${arcLabel.centroid(d)})`)
       .call((text) =>
         text
           .append("tspan")
           .attr("y", "-0.4em")
           .attr("font-weight", "bold")
+          //@ts-expect-error d.data is not a number, it's an object the same as "slice"
           .text((d) => d.data.name)
       )
       .call((text) =>
@@ -104,6 +112,7 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           .attr("x", 0)
           .attr("y", "0.7em")
           .attr("fill-opacity", 0.7)
+          //@ts-expect-error d.data is not a number, it's an object the same as "slice"
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
   }, [
@@ -142,6 +151,7 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
         .attr("cy", -(width / 2) * Math.cos(slice.endAngle))
         .attr("cx", (height / 2) * Math.sin(slice.endAngle))
         .attr("r", 20)
+        // @ts-expect-error color() never returns unknown, it's jank typing built into d3
         .attr("fill", color(data[index].name))
         .attr("stroke", "white")
         .call((circle) =>
@@ -159,16 +169,18 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
               const sliceEndValue = total * (mouseAngle360 / (2 * Math.PI));
 
               setCurrentManipulatedIndex(index);
-              data[index].set(Math.floor(sliceEndValue - sliceStartValue));
+              data[index].set(
+                Math.round((sliceEndValue - sliceStartValue) * 100) / 100
+              );
             })
           )
         );
     });
-  }, [arcs, data]);
+  }, [arcs, color, data, height, total]);
   return (
     <>
-      <svg ref={graphRef}></svg>
-      <svg ref={handlesRef}></svg>
+      <svg ref={graphRef as unknown as RefObject<SVGSVGElement>}></svg>
+      <svg ref={handlesRef as unknown as RefObject<SVGSVGElement>}></svg>
     </>
   );
 }

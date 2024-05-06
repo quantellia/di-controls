@@ -3,13 +3,13 @@ import DraggablePieChart from "./components/DraggableCharts";
 import Slider from "./components/Slider";
 
 function App() {
-  const [section1Value, setSection1Value] = useState(100);
-  const [section2Value, setSection2Value] = useState(100);
-  const [section3Value, setSection3Value] = useState(100);
-  const [section4Value, setSection4Value] = useState(100);
-  const [section5Value, setSection5Value] = useState(100);
-  const [section6Value, setSection6Value] = useState(100);
-  const [section7Value, setSection7Value] = useState(100);
+  const [section1Value, setSection1Value] = useState(1000);
+  const [section2Value, setSection2Value] = useState(1000);
+  const [section3Value, setSection3Value] = useState(1000);
+  const [section4Value, setSection4Value] = useState(1000);
+  const [section5Value, setSection5Value] = useState(1000);
+  const [section6Value, setSection6Value] = useState(1000);
+  const [section7Value, setSection7Value] = useState(1000);
 
   const graphValues = [
     { name: "blue", value: section1Value, set: setSection1Value },
@@ -25,11 +25,20 @@ function App() {
     <>
       <DraggablePieChart data={graphValues} compensate={true} />
       <p>
+        Total:
+        {Math.round(
+          graphValues.reduce(
+            (accumulator, slice) => accumulator + slice.value,
+            0
+          )
+        )}
+      </p>
+      <p>
         {graphValues.map((slice) => (
           <Slider
             title={`Section ${slice.name} value`}
             min={10}
-            max={1000}
+            max={2000}
             step={1}
             currentValue={slice.value}
             setCurrentValue={slice.set}
