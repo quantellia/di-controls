@@ -13,11 +13,14 @@ interface DraggablePieChartProps {
 function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
   const graphRef: MutableRefObject<string> = useRef();
   const handlesRef: MutableRefObject<string> = useRef();
+  const [currentManipulatedIndex, setCurrentManipulatedIndex] = useState(0);
   const [currentTotal] = useState(
     data.reduce((accumulator, slice) => accumulator + slice.value, 0)
   );
   const total = compensate
-    ? data.reduce((accumulator, slice) => accumulator + slice.value, 0)
+    ? Math.round(
+        data.reduce((accumulator, slice) => accumulator + slice.value, 0)
+      )
     : 0;
 
   const width = 500;
@@ -44,12 +47,15 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
   useEffect(() => {
     if (compensate) {
       const delta = total - currentTotal;
-      data.forEach((slice) => {
+      const indexesToAdjust = data.slice(currentManipulatedIndex + 1);
+      indexesToAdjust.forEach((slice) => {
         if (delta !== 0)
-          slice.set(Math.floor(slice.value - delta / data.length));
+          slice.set(
+            Math.round((slice.value - delta / indexesToAdjust.length) * 100) /
+              100
+          );
       });
     }
-
     const labelRadius = arc.outerRadius()() * 0.8;
     const arcLabel = d3.arc().innerRadius(labelRadius).outerRadius(labelRadius);
 
@@ -100,7 +106,17 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           .attr("fill-opacity", 0.7)
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
-  }, [arc, arcs, color, compensate, currentTotal, data, height, total]);
+  }, [
+    arc,
+    arcs,
+    color,
+    compensate,
+    currentTotal,
+    data,
+    height,
+    total,
+    currentManipulatedIndex,
+  ]);
 
   useEffect(() => {
     const svg = d3
@@ -133,26 +149,22 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
             // @ts-expect-error jank typing weirdness built into d3
             d3.drag().on("drag", (e) => {
               const mouseAngle = Math.atan(e.x / e.y);
-              circle.attr(
-                "cy",
-                Math.sign(e.y) * (width / 2) * Math.cos(mouseAngle)
-              );
-              circle.attr(
-                "cx",
-                Math.sign(e.y) * (height / 2) * Math.sin(mouseAngle)
-              );
               let mouseAngle360 =
                 mouseAngle > 0 ? Math.PI - mouseAngle : Math.abs(mouseAngle);
               mouseAngle360 = e.x < 0 ? Math.PI + mouseAngle360 : mouseAngle360;
-              const sliceStartValue =
-                total * (arcs[index].startAngle / (2 * Math.PI));
+
+              const sliceStartValue = data
+                .slice(0, index)
+                .reduce((accumulator, slice) => accumulator + slice.value, 0);
               const sliceEndValue = total * (mouseAngle360 / (2 * Math.PI));
-              data[index].set(sliceEndValue - sliceStartValue);
+
+              setCurrentManipulatedIndex(index);
+              data[index].set(Math.floor(sliceEndValue - sliceStartValue));
             })
           )
         );
     });
-  }, [arcs]);
+  }, [arcs, data]);
   return (
     <>
       <svg ref={graphRef}></svg>
