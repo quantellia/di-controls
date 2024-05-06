@@ -51,11 +51,12 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       const delta = total - currentTotal;
       const indexesToAdjust = data.slice(currentManipulatedIndex + 1);
       indexesToAdjust.forEach((slice) => {
-        if (delta !== 0)
-          slice.set(
+        if (delta !== 0) {
+          const targetValue =
             Math.round((slice.value - delta / indexesToAdjust.length) * 100) /
-              100
-          );
+            100;
+          slice.set(targetValue > 0 ? targetValue : 0);
+        }
       });
     }
     // @ts-expect-error 'd' doesn't need to be provided to outerRadius() in this context, blame the library
@@ -167,11 +168,11 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
                 .slice(0, index)
                 .reduce((accumulator, slice) => accumulator + slice.value, 0);
               const sliceEndValue = total * (mouseAngle360 / (2 * Math.PI));
+              const valueToSet =
+                Math.round((sliceEndValue - sliceStartValue) * 100) / 100;
 
               setCurrentManipulatedIndex(index);
-              data[index].set(
-                Math.round((sliceEndValue - sliceStartValue) * 100) / 100
-              );
+              data[index].set(valueToSet > 0 ? valueToSet : 0);
             })
           )
         );
