@@ -1,16 +1,30 @@
 import * as d3 from "d3";
 import { RefObject, useEffect, useRef, useState } from "react";
 
+interface d3Interpolate {
+  (t: number): string;
+}
+
 interface DraggablePieChartProps {
   data: Array<{
     name: string;
+    color?: string;
     value: number;
     set: React.Dispatch<React.SetStateAction<number>>;
   }>;
+  radius?: number;
+  donut?: boolean;
+  d3ColorScheme?: d3Interpolate;
   compensate?: boolean;
 }
 
-function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
+function DraggablePieChart({
+  data,
+  radius = 500,
+  compensate = true,
+  donut = false,
+  d3ColorScheme = d3.interpolateSpectral,
+}: DraggablePieChartProps) {
   const graphRef = useRef("graph");
   const handlesRef = useRef("handles");
   const [currentManipulatedIndex, setCurrentManipulatedIndex] = useState(0);
@@ -23,19 +37,17 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       )
     : 0;
 
-  const width = 500;
-  const height = width;
+  const width = radius;
+  const height = radius;
   const color = d3
     .scaleOrdinal()
     .domain(data.map((d) => d.name))
     .range(
-      d3
-        .quantize((t) => d3.interpolateSpectral(t * 0.8 + 0.1), data.length)
-        .reverse()
+      d3.quantize((t) => d3ColorScheme(t * 0.8 + 0.1), data.length).reverse()
     );
   const arc = d3
     .arc()
-    .innerRadius(Math.min(width, height) / 3.5 - 1)
+    .innerRadius(donut ? Math.min(width, height) / 3.5 - 1 : radius / 25)
     .outerRadius(Math.min(width, height) / 2 - 1);
   const pie = d3
     .pie()
@@ -83,8 +95,8 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
       .selectAll()
       .data(arcs)
       .join("path")
-      // @ts-expect-error color() never returns unknown, it's jank typing built into d3
-      .attr("fill", (d) => color(d.data.name))
+      // @ts-expect-error d.data is not a number, it's an object the same as "slice"
+      .attr("fill", (d) => d.data.color || (color(d.data.name) as string))
       // @ts-expect-error I don't even know why this works but that's untyped javascript for you
       .attr("d", arc)
       .append("title")
@@ -123,9 +135,10 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
     compensate,
     currentTotal,
     data,
-    height,
     total,
     currentManipulatedIndex,
+    width,
+    height,
   ]);
 
   useEffect(() => {
@@ -151,9 +164,8 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
         .append("circle")
         .attr("cy", -(width / 2) * Math.cos(slice.endAngle))
         .attr("cx", (height / 2) * Math.sin(slice.endAngle))
-        .attr("r", 20)
-        // @ts-expect-error color() never returns unknown, it's jank typing built into d3
-        .attr("fill", color(data[index].name))
+        .attr("r", radius / 25)
+        .attr("fill", data[index].color || (color(data[index].name) as string))
         .attr("stroke", "white")
         .call((circle) =>
           circle.call(
@@ -177,7 +189,7 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
           )
         );
     });
-  }, [arcs, color, data, height, total]);
+  }, [arcs, color, data, height, radius, total, width]);
   return (
     <>
       <svg ref={graphRef as unknown as RefObject<SVGSVGElement>}></svg>
@@ -186,4 +198,4 @@ function DraggablePieChart({ data, compensate }: DraggablePieChartProps) {
   );
 }
 
-export default DraggablePieChart;
+export { DraggablePieChart };

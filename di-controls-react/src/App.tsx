@@ -1,5 +1,6 @@
+import * as d3 from "d3";
 import { useState } from "react";
-import DraggablePieChart from "./components/DraggableCharts";
+import { DraggablePieChart } from "./components/DraggableCharts";
 import Slider from "./components/Slider";
 
 function App() {
@@ -10,6 +11,8 @@ function App() {
   const [section5Value, setSection5Value] = useState(1000);
   const [section6Value, setSection6Value] = useState(1000);
   const [section7Value, setSection7Value] = useState(1000);
+  const [chartRadius, setChartRadius] = useState(500);
+  const [isDonut, setIsDonut] = useState(0);
 
   const graphValues = [
     { name: "blue", value: section1Value, set: setSection1Value },
@@ -17,13 +20,23 @@ function App() {
     { name: "3", value: section3Value, set: setSection3Value },
     { name: "4", value: section4Value, set: setSection4Value },
     { name: "5", value: section5Value, set: setSection5Value },
-    { name: "6", value: section6Value, set: setSection6Value },
+    {
+      name: "6",
+      color: "#ff3399",
+      value: section6Value,
+      set: setSection6Value,
+    },
     { name: "7", value: section7Value, set: setSection7Value },
   ];
 
   return (
     <>
-      <DraggablePieChart data={graphValues} compensate={true} />
+      <DraggablePieChart
+        data={graphValues}
+        radius={chartRadius}
+        donut={!!isDonut}
+        // d3ColorScheme={d3.interpolateBuGn}
+      />
       <p>
         Total:
         {Math.round(
@@ -32,6 +45,24 @@ function App() {
             0
           )
         )}
+      </p>
+      <p>
+        <Slider
+          title="Radius"
+          min={100}
+          max={1000}
+          step={1}
+          currentValue={chartRadius}
+          setCurrentValue={setChartRadius}
+        />
+        <Slider
+          title="Donut Graph"
+          min={0}
+          max={1}
+          step={1}
+          currentValue={isDonut}
+          setCurrentValue={setIsDonut}
+        />
       </p>
       <p>
         {graphValues.map((slice) => (
