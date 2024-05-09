@@ -1,3 +1,4 @@
+import Color from "color";
 import * as d3 from "d3";
 import { RefObject, useEffect, useRef, useState } from "react";
 
@@ -13,17 +14,34 @@ interface DraggablePieChartProps {
     set: React.Dispatch<React.SetStateAction<number>>;
   }>;
   radius?: number;
-  donut?: boolean;
+  isDonut?: boolean;
   d3ColorScheme?: d3Interpolate;
+  textColor?: string;
+  stroke?: string;
+  onlyAdjustSubsequentSlices?: boolean;
   compensate?: boolean;
 }
 
+/**
+ *
+ * @param {Object} data Array of objects of type {name, color?, value, set} where 'value' and 'set' are derived from useState()
+ * @param {number} [radius=500] OPTIONAL, radius in pixels of the piechart element, default 500
+ * @param {boolean} [isDonut=false] OPTIONAL, whether or not the piechart is hollow, default false
+ * @param {d3Interpolate} [d3ColorScheme=d3.interpolateSpectral] OPTIONAL, d3 interpolate function for easily generating color schemes, default d3.interpolateSpectral
+ * @param {string=} textColor OPTIONAL, override for text color, default adjusts text color based on luminosity of each slice
+ * @param {string=} stroke OPTIONAL, override for stroke color around elements, default white
+ * @param {boolean} [onlyAdjustSubsequentSlices=false] OPTIONAL, override to only adjust slices ocurring 'after' the one being dragged, order starts from the top right element and then moves clockwise.  Can improve precision but causes all slices 'before' the one being edited to not readjust automatically, default false
+ * @returns pain
+ */
 function DraggablePieChart({
   data,
   radius = 500,
   compensate = true,
-  donut = false,
+  isDonut = false,
   d3ColorScheme = d3.interpolateSpectral,
+  textColor,
+  stroke,
+  onlyAdjustSubsequentSlices = false,
 }: DraggablePieChartProps) {
   const graphRef = useRef("graph");
   const handlesRef = useRef("handles");
@@ -45,9 +63,10 @@ function DraggablePieChart({
     .range(
       d3.quantize((t) => d3ColorScheme(t * 0.8 + 0.1), data.length).reverse()
     );
+  const colorLuminosityThreshold = 0.15;
   const arc = d3
     .arc()
-    .innerRadius(donut ? Math.min(width, height) / 3.5 - 1 : radius / 25)
+    .innerRadius(isDonut ? Math.min(width, height) / 3.5 - 1 : radius / 25)
     .outerRadius(Math.min(width, height) / 2 - 1);
   const pie = d3
     .pie()
@@ -61,9 +80,11 @@ function DraggablePieChart({
   useEffect(() => {
     if (compensate) {
       const delta = total - currentTotal;
-      const indexesToAdjust = data.slice(currentManipulatedIndex + 1);
+      const indexesToAdjust = onlyAdjustSubsequentSlices
+        ? data.slice(currentManipulatedIndex + 1)
+        : data;
       indexesToAdjust.forEach((slice) => {
-        if (delta !== 0) {
+        if (delta !== 0 && slice !== indexesToAdjust[currentManipulatedIndex]) {
           const targetValue =
             Math.round((slice.value - delta / indexesToAdjust.length) * 100) /
             100;
@@ -85,13 +106,19 @@ function DraggablePieChart({
         width * 1.1,
         height * 1.1,
       ])
-      .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
+      .attr(
+        "style",
+        `max-width: 100%; height: auto; font: ${Math.max(
+          radius / 40,
+          12
+        )}px sans-serif;`
+      );
 
     svg.selectAll("g").remove();
 
     svg
       .append("g")
-      .attr("stroke", "white")
+      .attr("stroke", stroke || "white")
       .selectAll()
       .data(arcs)
       .join("path")
@@ -115,6 +142,17 @@ function DraggablePieChart({
           .append("tspan")
           .attr("y", "-0.4em")
           .attr("font-weight", "bold")
+          .attr(
+            "fill",
+            textColor ||
+              ((d) =>
+                Color(
+                  // @ts-expect-error d.data is not a number, it's an object the same as "slice"
+                  d.data.color || (color(d.data.name) as string)
+                ).luminosity() < colorLuminosityThreshold
+                  ? "white"
+                  : "black")
+          )
           //@ts-expect-error d.data is not a number, it's an object the same as "slice"
           .text((d) => d.data.name)
       )
@@ -125,6 +163,17 @@ function DraggablePieChart({
           .attr("x", 0)
           .attr("y", "0.7em")
           .attr("fill-opacity", 0.7)
+          .attr(
+            "fill",
+            textColor ||
+              ((d) =>
+                Color(
+                  // @ts-expect-error d.data is not a number, it's an object the same as "slice"
+                  d.data.color || (color(d.data.name) as string)
+                ).luminosity() < colorLuminosityThreshold
+                  ? "white"
+                  : "black")
+          )
           //@ts-expect-error d.data is not a number, it's an object the same as "slice"
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
@@ -139,6 +188,10 @@ function DraggablePieChart({
     currentManipulatedIndex,
     width,
     height,
+    onlyAdjustSubsequentSlices,
+    stroke,
+    textColor,
+    radius,
   ]);
 
   useEffect(() => {
@@ -166,7 +219,7 @@ function DraggablePieChart({
         .attr("cx", (height / 2) * Math.sin(slice.endAngle))
         .attr("r", radius / 25)
         .attr("fill", data[index].color || (color(data[index].name) as string))
-        .attr("stroke", "white")
+        .attr("stroke", stroke || "white")
         .call((circle) =>
           circle.call(
             // @ts-expect-error jank typing weirdness built into d3
@@ -175,6 +228,11 @@ function DraggablePieChart({
               let mouseAngle360 =
                 mouseAngle > 0 ? Math.PI - mouseAngle : Math.abs(mouseAngle);
               mouseAngle360 = e.x < 0 ? Math.PI + mouseAngle360 : mouseAngle360;
+              mouseAngle360 =
+                mouseAngle360 < arcs[index].startAngle &&
+                !onlyAdjustSubsequentSlices
+                  ? 2 * Math.PI + mouseAngle360
+                  : mouseAngle360;
 
               const sliceStartValue = data
                 .slice(0, index)
@@ -189,7 +247,18 @@ function DraggablePieChart({
           )
         );
     });
-  }, [arcs, color, data, height, radius, total, width]);
+  }, [
+    arcs,
+    color,
+    data,
+    height,
+    onlyAdjustSubsequentSlices,
+    radius,
+    stroke,
+    total,
+    width,
+  ]);
+
   return (
     <>
       <svg ref={graphRef as unknown as RefObject<SVGSVGElement>}></svg>

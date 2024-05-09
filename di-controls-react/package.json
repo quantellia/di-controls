@@ -12,6 +12,7 @@
   "dependencies": {
     "@canvasjs/react-charts": "^1.0.2",
     "chart.js": "^4.4.2",
+    "color": "^4.2.3",
     "d3": "^7.9.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
+    "@types/color": "^3.0.6",
     "@types/d3": "^7.4.3",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
