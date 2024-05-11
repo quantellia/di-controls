@@ -44,7 +44,6 @@ function DraggablePieChart({
   onlyAdjustSubsequentSlices = false,
 }: DraggablePieChartProps) {
   const graphRef = useRef("graph");
-  const handlesRef = useRef("handles");
   const [currentManipulatedIndex, setCurrentManipulatedIndex] = useState(0);
   const [currentTotal] = useState(
     data.reduce((accumulator, slice) => accumulator + slice.value, 0)
@@ -84,7 +83,10 @@ function DraggablePieChart({
         ? data.slice(currentManipulatedIndex + 1)
         : data;
       indexesToAdjust.forEach((slice) => {
-        if (delta !== 0 && slice !== indexesToAdjust[currentManipulatedIndex]) {
+        if (
+          Math.floor(delta) !== 0 &&
+          slice !== indexesToAdjust[currentManipulatedIndex]
+        ) {
           const targetValue =
             Math.round((slice.value - delta / indexesToAdjust.length) * 100) /
             100;
@@ -177,17 +179,11 @@ function DraggablePieChart({
           //@ts-expect-error d.data is not a number, it's an object the same as "slice"
           .text((d) => d.data.value.toLocaleString("en-US"))
       );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    arc,
-    arcs,
     color,
-    compensate,
     currentTotal,
     data,
-    total,
-    currentManipulatedIndex,
-    width,
-    height,
     onlyAdjustSubsequentSlices,
     stroke,
     textColor,
@@ -196,7 +192,7 @@ function DraggablePieChart({
 
   useEffect(() => {
     const svg = d3
-      .select(handlesRef.current)
+      .select(graphRef.current)
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", [
@@ -207,7 +203,10 @@ function DraggablePieChart({
       ])
       .attr(
         "style",
-        `max-width: 100%; height: auto; font: 10px sans-serif; position: relative; left: -${width}px`
+        `max-width: 100%; height: auto; font: ${Math.max(
+          radius / 40,
+          12
+        )}px sans-serif;`
       );
 
     svg.selectAll("circle").remove();
@@ -247,22 +246,12 @@ function DraggablePieChart({
           )
         );
     });
-  }, [
-    arcs,
-    color,
-    data,
-    height,
-    onlyAdjustSubsequentSlices,
-    radius,
-    stroke,
-    total,
-    width,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [color, data, onlyAdjustSubsequentSlices, radius, stroke]);
 
   return (
     <>
       <svg ref={graphRef as unknown as RefObject<SVGSVGElement>}></svg>
-      <svg ref={handlesRef as unknown as RefObject<SVGSVGElement>}></svg>
     </>
   );
 }

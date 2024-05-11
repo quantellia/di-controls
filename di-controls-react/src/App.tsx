@@ -18,25 +18,56 @@ function App() {
   const [chartRadius, setChartRadius] = useState(500);
   const [isDonut, setIsDonut] = useState(0);
 
-  const graphValues = [
+  const graph1 = [
     { name: "1", value: section1Value, set: setSection1Value },
     { name: "2", value: section2Value, set: setSection2Value },
     { name: "3", value: section3Value, set: setSection3Value },
-    { name: "4", value: section4Value, set: setSection4Value },
-    { name: "5", value: section5Value, set: setSection5Value },
-    { name: "6", value: section6Value, set: setSection6Value },
-    { name: "7", value: section7Value, set: setSection7Value },
+  ];
+  const graph2 = [
+    {
+      name: "4",
+      value: section4Value,
+      color: "#ffd166",
+      set: setSection4Value,
+    },
+    {
+      name: "5",
+      value: section5Value,
+      color: "#fb8500",
+      set: setSection5Value,
+    },
+    {
+      name: "6",
+      value: section6Value,
+      color: "rgb(209, 60, 75)",
+      set: setSection6Value,
+    },
+    {
+      name: "7",
+      value: section7Value,
+      color: "#EF476F",
+      set: setSection7Value,
+    },
   ];
 
   return (
     <>
       <DraggablePieChart
-        data={graphValues.slice(0, numSlices)}
+        data={graph1}
+        radius={chartRadius}
+        isDonut={!!isDonut}
+        onlyAdjustSubsequentSlices={true}
+        d3ColorScheme={d3.interpolateBuPu}
+        // textColor="white"
+        stroke="#323232"
+      />
+      <DraggablePieChart
+        data={graph2}
         radius={chartRadius}
         isDonut={!!isDonut}
         onlyAdjustSubsequentSlices={false}
         // d3ColorScheme={d3.interpolateBuPu}
-        // textColor="white"
+        textColor="white"
         // stroke="#ff3399"
       />
       <p>
@@ -58,7 +89,7 @@ function App() {
         />
       </p>
       <p>
-        {graphValues.map((slice) => (
+        {[...graph1, ...graph2].map((slice) => (
           <Slider
             title={`Section ${slice.name} value`}
             min={10}
