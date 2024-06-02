@@ -1,6 +1,9 @@
 import * as d3 from "d3";
 import { useState } from "react";
-import { DraggablePieChart } from "./components/DraggableCharts";
+import {
+  DraggablePieChart,
+  DraggableLineChart,
+} from "./components/DraggableCharts";
 import Slider from "./components/Slider";
 
 function App() {
@@ -14,6 +17,19 @@ function App() {
   const [section5Value, setSection5Value] = useState(total / numSlices);
   const [section6Value, setSection6Value] = useState(total / numSlices);
   const [section7Value, setSection7Value] = useState(total / numSlices);
+
+  const [lineChartData, setLineChartData] = useState([
+    { x: 0, y: 90 },
+    { x: 1, y: 12 },
+    { x: 2, y: 34 },
+    { x: 3, y: 53 },
+    { x: 4, y: 52 },
+    { x: 5, y: 9 },
+    { x: 6, y: 18 },
+    { x: 7, y: 78 },
+    { x: 8, y: 28 },
+    { x: 9, y: 34 },
+  ]);
 
   const [chartRadius, setChartRadius] = useState(500);
   const [isDonut, setIsDonut] = useState(0);
@@ -69,6 +85,11 @@ function App() {
         // d3ColorScheme={d3.interpolateBuPu}
         textColor="white"
         // stroke="#ff3399"
+      />
+      <DraggableLineChart
+        data={lineChartData}
+        set={setLineChartData}
+        isAreaChart={true}
       />
       <p>
         <Slider

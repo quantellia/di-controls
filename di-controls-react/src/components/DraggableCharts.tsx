@@ -1,6 +1,6 @@
 import Color from "color";
 import * as d3 from "d3";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 
 interface d3Interpolate {
   (t: number): string;
@@ -19,6 +19,17 @@ interface DraggablePieChartProps {
   textColor?: string;
   stroke?: string;
   onlyAdjustSubsequentSlices?: boolean;
+}
+
+interface DraggableAreaChartProps {
+  data: Array<{
+    x: number;
+    y: number;
+  }>;
+  set: React.Dispatch<React.SetStateAction<Array<any>>>;
+  width?: number;
+  height?: number;
+  isAreaChart?: boolean;
 }
 
 /**
@@ -309,4 +320,110 @@ function DraggablePieChart({
   );
 }
 
-export { DraggablePieChart };
+function DraggableLineChart({
+  data,
+  set,
+  width = 500,
+  height = 500,
+  isAreaChart = false,
+}: DraggableAreaChartProps) {
+  const graphRef = useRef(null);
+
+  const [yMin, yMax] = d3.extent(data, (d) => d.y);
+  const yScale = useMemo(() => {
+    return d3
+      .scaleLinear()
+      .domain([0, yMax || 0])
+      .range([height, 0]);
+  }, [data, height]);
+
+  const [xMin, xMax] = d3.extent(data, (d) => d.x);
+  const xScale = useMemo(() => {
+    return d3
+      .scaleLinear()
+      .domain([xMin || 0, xMax || 0])
+      .range([0, width]);
+  }, [data, width]);
+
+  useEffect(() => {
+    const svg = d3.select(graphRef.current);
+    svg.selectAll("*").remove();
+    const xAxisGenerator = d3.axisBottom(xScale);
+    svg
+      .append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxisGenerator);
+
+    const yAxisGenerator = d3.axisLeft(yScale);
+    svg.append("g").call(yAxisGenerator);
+    // Add the area
+    if (isAreaChart) {
+      svg
+        .append("path")
+        .datum(data)
+        .attr("fill", "#69b3a2")
+        .attr("fill-opacity", 0.3)
+        .attr("stroke", "none")
+        .attr(
+          "d",
+          d3
+            .area()
+            .x((d) => xScale(d.x))
+            .y0(height)
+            .y1((d) => yScale(d.y))
+        );
+    }
+    // Add the line
+    svg
+      .append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "#69b3a2")
+      .attr("stroke-width", 4)
+      .attr(
+        "d",
+        d3
+          .line()
+          .x((d) => xScale(d.x))
+          .y((d) => yScale(d.y))
+      );
+
+    // // Add the line
+    // svg
+    //   .selectAll("myCircles")
+    //   .data(data)
+    //   .join("circle")
+    //   .attr("fill", "#69b3a2")
+    //   .attr("stroke", "none")
+    //   .attr("cx", (d) => xScale(d.x))
+    //   .attr("cy", (d) => yScale(d.y))
+    //   .attr("r", 6);
+
+    data.forEach((point) => {
+      svg
+        .append("circle")
+        .attr("fill", "#69b3a2")
+        .attr("stroke", "none")
+        .attr("cx", (d) => xScale(point.x))
+        .attr("cy", (d) => yScale(point.y))
+        .attr("r", 6)
+        .call((circle) =>
+          circle.call(
+            // @ts-expect-error jank typing built into d3
+            d3.drag().on("drag", (e) => {
+              const newData = data;
+              newData[point.x] = {
+                x: point.x,
+                y: yScale.invert(e.y),
+              };
+              set([...newData]);
+            })
+          )
+        );
+    });
+  }, [xScale, yScale, height, data, isAreaChart, set]);
+
+  return <svg width={width} height={height} ref={graphRef} />;
+}
+
+export { DraggablePieChart, DraggableLineChart };
