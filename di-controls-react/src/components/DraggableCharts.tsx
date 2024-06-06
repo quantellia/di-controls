@@ -23,13 +23,17 @@ interface DraggablePieChartProps {
 
 interface DraggableAreaChartProps {
   data: Array<{
-    x: number;
-    y: number;
+    name?: string;
+    value: number;
+    set: React.Dispatch<React.SetStateAction<number>>;
   }>;
-  set: React.Dispatch<React.SetStateAction<Array<any>>>;
   width?: number;
   height?: number;
   isAreaChart?: boolean;
+  color?: string;
+  areaColor?: string;
+  textColor?: string;
+  stroke?: string;
 }
 
 /**
@@ -322,27 +326,34 @@ function DraggablePieChart({
 
 function DraggableLineChart({
   data,
-  set,
   width = 500,
   height = 500,
   isAreaChart = false,
+  color = "#69b3a2",
+  areaColor = "rgba(105, 179, 162, 0.3)",
+  textColor = "black",
+  stroke = "white",
 }: DraggableAreaChartProps) {
   const graphRef = useRef(null);
+  const graphValues = data.map((point, index) => ({
+    x: index,
+    y: point.value,
+    set: point.set,
+  }));
 
-  const [yMin, yMax] = d3.extent(data, (d) => d.y);
+  const [yMin, yMax] = d3.extent(data, (d) => d.value);
   const yScale = useMemo(() => {
     return d3
       .scaleLinear()
       .domain([0, yMax || 0])
-      .range([height, 0]);
+      .range([height - 20, 10]);
   }, [data, height]);
 
-  const [xMin, xMax] = d3.extent(data, (d) => d.x);
   const xScale = useMemo(() => {
     return d3
       .scaleLinear()
-      .domain([xMin || 0, xMax || 0])
-      .range([0, width]);
+      .domain([0, data.length])
+      .range([30, width - 10]);
   }, [data, width]);
 
   useEffect(() => {
@@ -351,34 +362,38 @@ function DraggableLineChart({
     const xAxisGenerator = d3.axisBottom(xScale);
     svg
       .append("g")
-      .attr("transform", "translate(0," + height + ")")
+      .attr("transform", "translate(0," + (height - 20) + ")")
       .call(xAxisGenerator);
 
     const yAxisGenerator = d3.axisLeft(yScale);
-    svg.append("g").call(yAxisGenerator);
+    svg
+      .append("g")
+      .call(yAxisGenerator)
+      .attr("transform", "translate(" + 30 + ",0)");
+
     // Add the area
     if (isAreaChart) {
       svg
         .append("path")
-        .datum(data)
-        .attr("fill", "#69b3a2")
-        .attr("fill-opacity", 0.3)
+        .datum(graphValues)
+        .attr("fill", areaColor)
         .attr("stroke", "none")
         .attr(
           "d",
           d3
             .area()
             .x((d) => xScale(d.x))
-            .y0(height)
+            .y0(height - 20)
             .y1((d) => yScale(d.y))
         );
     }
+
     // Add the line
     svg
       .append("path")
-      .datum(data)
+      .datum(graphValues)
       .attr("fill", "none")
-      .attr("stroke", "#69b3a2")
+      .attr("stroke", color)
       .attr("stroke-width", 4)
       .attr(
         "d",
@@ -388,22 +403,11 @@ function DraggableLineChart({
           .y((d) => yScale(d.y))
       );
 
-    // // Add the line
-    // svg
-    //   .selectAll("myCircles")
-    //   .data(data)
-    //   .join("circle")
-    //   .attr("fill", "#69b3a2")
-    //   .attr("stroke", "none")
-    //   .attr("cx", (d) => xScale(d.x))
-    //   .attr("cy", (d) => yScale(d.y))
-    //   .attr("r", 6);
-
-    data.forEach((point) => {
+    graphValues.forEach((point) => {
       svg
         .append("circle")
-        .attr("fill", "#69b3a2")
-        .attr("stroke", "none")
+        .attr("fill", color)
+        .attr("stroke", stroke)
         .attr("cx", (d) => xScale(point.x))
         .attr("cy", (d) => yScale(point.y))
         .attr("r", 6)
@@ -411,17 +415,13 @@ function DraggableLineChart({
           circle.call(
             // @ts-expect-error jank typing built into d3
             d3.drag().on("drag", (e) => {
-              const newData = data;
-              newData[point.x] = {
-                x: point.x,
-                y: yScale.invert(e.y),
-              };
-              set([...newData]);
+              const newY = e.y < height - 20 ? e.y : height - 20;
+              point.set(yScale.invert(newY));
             })
           )
         );
     });
-  }, [xScale, yScale, height, data, isAreaChart, set]);
+  }, [xScale, yScale, height, data, isAreaChart]);
 
   return <svg width={width} height={height} ref={graphRef} />;
 }
