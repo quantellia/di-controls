@@ -1,6 +1,6 @@
 import Color from "color";
 import * as d3 from "d3";
-import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { RefObject, useMemo, useRef, useState } from "react";
 
 interface d3Interpolate {
   (t: number): string;
@@ -23,7 +23,7 @@ interface DraggablePieChartProps {
 
 interface DraggableAreaChartProps {
   data: Array<{
-    name?: string;
+    xValue?: number;
     value: number;
     set: React.Dispatch<React.SetStateAction<number>>;
   }>;
@@ -95,7 +95,7 @@ function DraggablePieChart({
 
   // this useEffect() is here as we want to re-render our piechart whenever any of the variables that it builds itself from change
   // these variables are contained in the dependency array at the bottom of the function
-  useEffect(() => {
+  useMemo(() => {
     // when the chart updates, we need to adjust other slices from the one that we affected, this is where we do that
     const delta = total - currentTotal; // get the difference between all the current values and what they should be
     const indexesToAdjust = onlyAdjustSubsequentSlices // get the indexes of the data array that we want to adjust
@@ -232,7 +232,7 @@ function DraggablePieChart({
   // this is because the position of the handles is not updated from the DOM but rather from our interaction so they do not need to be recalculated
   // like the rest of the chart does
   // however, they do need to be recalculated if the colours change, the chart changes size, etc.
-  useEffect(() => {
+  useMemo(() => {
     // add another svg component to our original graph using the graphRef
     const svg = d3
       .select(graphRef.current)
@@ -319,7 +319,7 @@ function DraggablePieChart({
 
   return (
     <>
-      <svg ref={graphRef as unknown as RefObject<SVGSVGElement>}></svg>
+      <svg ref={graphRef as unknown as RefObject<SVGSVGElement>} />
     </>
   );
 }
@@ -336,40 +336,48 @@ function DraggableLineChart({
 }: DraggableAreaChartProps) {
   const graphRef = useRef(null);
   const graphValues = data.map((point, index) => ({
-    x: index,
+    x: point.xValue || index,
     y: point.value,
     set: point.set,
   }));
+  const maxXValue = Math.max(
+    ...data
+      .filter((point) => point.xValue !== undefined)
+      .map((point) => point.xValue || 0)
+  );
 
-  const [yMin, yMax] = d3.extent(data, (d) => d.value);
+  const [, yMax] = d3.extent(data, (d) => d.value);
   const yScale = useMemo(() => {
     return d3
       .scaleLinear()
       .domain([0, yMax || 0])
       .range([height - 20, 10]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, height]);
 
   const xScale = useMemo(() => {
     return d3
       .scaleLinear()
-      .domain([0, data.length])
+      .domain([0, Math.max(maxXValue, data.length)])
       .range([30, width - 10]);
-  }, [data, width]);
+  }, [data.length, maxXValue, width]);
 
-  useEffect(() => {
+  useMemo(() => {
     const svg = d3.select(graphRef.current);
     svg.selectAll("*").remove();
     const xAxisGenerator = d3.axisBottom(xScale);
     svg
       .append("g")
+      .call(xAxisGenerator)
       .attr("transform", "translate(0," + (height - 20) + ")")
-      .call(xAxisGenerator);
+      .attr("color", textColor);
 
     const yAxisGenerator = d3.axisLeft(yScale);
     svg
       .append("g")
       .call(yAxisGenerator)
-      .attr("transform", "translate(" + 30 + ",0)");
+      .attr("transform", "translate(" + 30 + ",0)")
+      .attr("color", textColor);
 
     // Add the area
     if (isAreaChart) {
@@ -380,10 +388,13 @@ function DraggableLineChart({
         .attr("stroke", "none")
         .attr(
           "d",
+          //@ts-expect-error jank typing built into d3
           d3
             .area()
+            //@ts-expect-error jank typing built into d3
             .x((d) => xScale(d.x))
             .y0(height - 20)
+            //@ts-expect-error jank typing built into d3
             .y1((d) => yScale(d.y))
         );
     }
@@ -397,9 +408,12 @@ function DraggableLineChart({
       .attr("stroke-width", 4)
       .attr(
         "d",
+        //@ts-expect-error jank typing built into d3
         d3
           .line()
+          //@ts-expect-error jank typing built into d3
           .x((d) => xScale(d.x))
+          //@ts-expect-error jank typing built into d3
           .y((d) => yScale(d.y))
       );
 
@@ -408,8 +422,8 @@ function DraggableLineChart({
         .append("circle")
         .attr("fill", color)
         .attr("stroke", stroke)
-        .attr("cx", (d) => xScale(point.x))
-        .attr("cy", (d) => yScale(point.y))
+        .attr("cx", () => xScale(point.x))
+        .attr("cy", () => yScale(point.y))
         .attr("r", 6)
         .call((circle) =>
           circle.call(
@@ -421,6 +435,7 @@ function DraggableLineChart({
           )
         );
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [xScale, yScale, height, data, isAreaChart]);
 
   return <svg width={width} height={height} ref={graphRef} />;

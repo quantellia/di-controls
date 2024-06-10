@@ -29,8 +29,8 @@ function App() {
   const [point9, setPoint9] = useState(28);
   const [point10, setPoint10] = useState(34);
 
-  const [chartRadius, setChartRadius] = useState(500);
-  const [isDonut, setIsDonut] = useState(0);
+  const [chartRadius /*setChartRadius*/] = useState(500);
+  const [isDonut /*setIsDonut*/] = useState(0);
 
   const graph1 = [
     { name: "1", value: section1Value, set: setSection1Value },
@@ -74,7 +74,7 @@ function App() {
     { value: point7, set: setPoint7 },
     { value: point8, set: setPoint8 },
     { value: point9, set: setPoint9 },
-    { value: point10, set: setPoint10 },
+    { xValue: 18, value: point10, set: setPoint10 },
   ];
 
   return (
