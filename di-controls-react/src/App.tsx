@@ -1,6 +1,9 @@
 import * as d3 from "d3";
 import { useState } from "react";
-import { DraggablePieChart } from "./components/DraggableCharts";
+import {
+  DraggablePieChart,
+  DraggableLineChart,
+} from "./components/DraggableCharts";
 import Slider from "./components/Slider";
 
 function App() {
@@ -15,8 +18,19 @@ function App() {
   const [section6Value, setSection6Value] = useState(total / numSlices);
   const [section7Value, setSection7Value] = useState(total / numSlices);
 
-  const [chartRadius, setChartRadius] = useState(500);
-  const [isDonut, setIsDonut] = useState(0);
+  const [point1, setPoint1] = useState(90);
+  const [point2, setPoint2] = useState(12);
+  const [point3, setPoint3] = useState(34);
+  const [point4, setPoint4] = useState(53);
+  const [point5, setPoint5] = useState(52);
+  const [point6, setPoint6] = useState(9);
+  const [point7, setPoint7] = useState(18);
+  const [point8, setPoint8] = useState(78);
+  const [point9, setPoint9] = useState(28);
+  const [point10, setPoint10] = useState(34);
+
+  const [chartRadius /*setChartRadius*/] = useState(500);
+  const [isDonut /*setIsDonut*/] = useState(0);
 
   const graph1 = [
     { name: "1", value: section1Value, set: setSection1Value },
@@ -50,6 +64,19 @@ function App() {
     },
   ];
 
+  const graph3 = [
+    { value: point1, set: setPoint1 },
+    { value: point2, set: setPoint2 },
+    { value: point3, set: setPoint3 },
+    { value: point4, set: setPoint4 },
+    { value: point5, set: setPoint5 },
+    { value: point6, set: setPoint6 },
+    { value: point7, set: setPoint7 },
+    { value: point8, set: setPoint8 },
+    { value: point9, set: setPoint9 },
+    { xValue: 18, value: point10, set: setPoint10 },
+  ];
+
   return (
     <>
       <DraggablePieChart
@@ -70,36 +97,28 @@ function App() {
         textColor="white"
         // stroke="#ff3399"
       />
-      <p>
-        <Slider
-          title="Radius"
-          min={100}
-          max={1000}
-          step={1}
-          currentValue={chartRadius}
-          setCurrentValue={setChartRadius}
-        />
-        <Slider
-          title="Donut Graph"
-          min={0}
-          max={1}
-          step={1}
-          currentValue={isDonut}
-          setCurrentValue={setIsDonut}
-        />
-      </p>
-      <p>
-        {[...graph1, ...graph2].map((slice) => (
+      <DraggableLineChart
+        data={[...graph1, ...graph2, ...graph3]}
+        isAreaChart={true}
+        color="rgb(12, 98, 145)"
+        areaColor="rgba(12, 98, 145, 0.3)"
+        stroke="none"
+        width={900}
+      />
+      <div style={{ display: "inline flow-root" }}>
+        {[...graph3].map((point, index) => (
           <Slider
-            title={`Section ${slice.name} value`}
-            min={10}
-            max={2000}
+            title={`Point ${index} value`}
+            min={0}
+            max={250}
             step={1}
-            currentValue={slice.value}
-            setCurrentValue={slice.set}
+            currentValue={point.value}
+            setCurrentValue={point.set}
           />
         ))}
-      </p>
+      </div>
+
+      <p></p>
     </>
   );
 }
