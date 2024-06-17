@@ -36,6 +36,20 @@ interface DraggableAreaChartProps {
   stroke?: string;
 }
 
+type Node = {
+  name?: string;
+  value?: number;
+  set?: React.Dispatch<React.SetStateAction<number>>;
+  children?: Array<Node>;
+};
+
+interface TreemapProps {
+  width?: number;
+  height?: number;
+  data: Node;
+  d3ColorScheme?: d3Interpolate;
+}
+
 /**
  *
  * @param {Object} data Array of objects of type {name, color?, value, set} where 'value' and 'set' are derived from useState()
@@ -436,9 +450,87 @@ function DraggableLineChart({
         );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [xScale, yScale, height, data, isAreaChart]);
+  }, [xScale, yScale, height, width, data, isAreaChart]);
 
   return <svg width={width} height={height} ref={graphRef} />;
 }
 
-export { DraggablePieChart, DraggableLineChart };
+function DraggableTreeMap({
+  width = 500,
+  height = 500,
+  data,
+  d3ColorScheme = d3.interpolateSpectral,
+}: TreemapProps) {
+  const hierarchy = useMemo(() => {
+    return d3.hierarchy(data).sum((d) => d.value || 0);
+  }, [data]);
+
+  // List of item of level 1 (just under root) & related color scale
+  const firstLevelGroups = hierarchy?.children?.map(
+    (child) => child.data.name || ""
+  );
+  const colorScale = d3
+    .scaleOrdinal<string>()
+    .domain(firstLevelGroups || [])
+    .range(
+      d3
+        .quantize(
+          (t) => d3ColorScheme(t * 0.8 + 0.1),
+          data.children?.length || 0
+        )
+        .reverse()
+    );
+
+  const root = useMemo(() => {
+    const treeGenerator = d3.treemap<Node>().size([width, height]).padding(4);
+    return treeGenerator(hierarchy);
+  }, [hierarchy, width, height]);
+
+  const allShapes = root.leaves().map((leaf) => {
+    const parentName = leaf.parent?.data.name || "";
+    return (
+      <g key={leaf.id}>
+        <rect
+          x={leaf.x0}
+          y={leaf.y0}
+          width={leaf.x1 - leaf.x0}
+          height={leaf.y1 - leaf.y0}
+          stroke="transparent"
+          fill={colorScale(parentName)}
+        />
+        <text
+          x={leaf.x0 + 3}
+          y={leaf.y0 + 10}
+          fontSize={12}
+          textAnchor="start"
+          alignmentBaseline="hanging"
+          fill="black"
+          className="font-bold"
+        >
+          {leaf.data.name}
+        </text>
+        <text
+          x={leaf.x0 + 3}
+          y={leaf.y0 + 25}
+          fontSize={12}
+          textAnchor="start"
+          alignmentBaseline="hanging"
+          fill="black"
+          className="font-light"
+        >
+          {leaf.data.value}
+        </text>
+      </g>
+    );
+  });
+
+  return (
+    <div>
+      <svg width={width} height={height}>
+        {allShapes}
+      </svg>
+    </div>
+  );
+}
+
+export { DraggablePieChart, DraggableLineChart, DraggableTreeMap };

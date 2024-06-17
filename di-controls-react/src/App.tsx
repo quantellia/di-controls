@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   DraggablePieChart,
   DraggableLineChart,
+  DraggableTreeMap,
 } from "./components/DraggableCharts";
 import Slider from "./components/Slider";
 
@@ -65,17 +66,49 @@ function App() {
   ];
 
   const graph3 = [
-    { value: point1, set: setPoint1 },
-    { value: point2, set: setPoint2 },
-    { value: point3, set: setPoint3 },
-    { value: point4, set: setPoint4 },
-    { value: point5, set: setPoint5 },
-    { value: point6, set: setPoint6 },
-    { value: point7, set: setPoint7 },
-    { value: point8, set: setPoint8 },
-    { value: point9, set: setPoint9 },
-    { xValue: 18, value: point10, set: setPoint10 },
+    { name: "1", value: point1, set: setPoint1 },
+    { name: "2", value: point2, set: setPoint2 },
+    { name: "3", value: point3, set: setPoint3 },
+    { name: "4", value: point4, set: setPoint4 },
+    { name: "5", value: point5, set: setPoint5 },
+    { name: "6", value: point6, set: setPoint6 },
+    { name: "7", value: point7, set: setPoint7 },
+    { name: "8", value: point8, set: setPoint8 },
+    { name: "9", value: point9, set: setPoint9 },
+    { name: "10", xValue: 18, value: point10, set: setPoint10 },
   ];
+
+  const treemap = {
+    children: [
+      {
+        name: "group1",
+        children: [
+          { name: "a", value: 90 },
+          { name: "b", value: 15 },
+          { name: "c", value: 30 },
+          { name: "d", value: 47 },
+        ],
+      },
+      {
+        name: "group2",
+        children: [
+          { name: "e", value: 32 },
+          { name: "f", value: 26 },
+          { name: "g", value: 8 },
+        ],
+      },
+      {
+        name: "group3",
+        children: [
+          { name: "h", value: 14 },
+          { name: "i", value: 100 },
+          { name: "j", value: 67 },
+          { name: "k", value: 22 },
+          { name: "l", value: 30 },
+        ],
+      },
+    ],
+  };
 
   return (
     <>
@@ -97,8 +130,9 @@ function App() {
         textColor="white"
         // stroke="#ff3399"
       />
+      <DraggablePieChart data={graph3} />
       <DraggableLineChart
-        data={[...graph1, ...graph2, ...graph3]}
+        data={graph3}
         isAreaChart={true}
         color="rgb(12, 98, 145)"
         areaColor="rgba(12, 98, 145, 0.3)"
@@ -117,8 +151,7 @@ function App() {
           />
         ))}
       </div>
-
-      <p></p>
+      <DraggableTreeMap data={treemap} />
     </>
   );
 }
