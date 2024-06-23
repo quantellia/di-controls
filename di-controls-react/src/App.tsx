@@ -94,13 +94,13 @@ function App() {
         children: [
           { name: "e", value: 32 },
           { name: "f", value: 26 },
-          { name: "g", value: 8 },
+          { name: "g", value: 13 },
         ],
       },
       {
         name: "group3",
         children: [
-          { name: "h", value: 14 },
+          { name: "h", value: 26 },
           { name: "i", value: 100 },
           { name: "j", value: 67 },
           { name: "k", value: 22 },

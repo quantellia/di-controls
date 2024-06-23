@@ -461,6 +461,7 @@ function DraggableTreeMap({
   data,
   d3ColorScheme = d3.interpolateSpectral,
 }: TreemapProps) {
+  const graphRef = useRef(null);
   const hierarchy = useMemo(() => {
     return d3.hierarchy(data).sum((d) => d.value || 0);
   }, [data]);
@@ -486,51 +487,69 @@ function DraggableTreeMap({
     return treeGenerator(hierarchy);
   }, [hierarchy, width, height]);
 
-  const allShapes = root.leaves().map((leaf) => {
-    const parentName = leaf.parent?.data.name || "";
-    return (
-      <g key={leaf.id}>
-        <rect
-          x={leaf.x0}
-          y={leaf.y0}
-          width={leaf.x1 - leaf.x0}
-          height={leaf.y1 - leaf.y0}
-          stroke="transparent"
-          fill={colorScale(parentName)}
-        />
-        <text
-          x={leaf.x0 + 3}
-          y={leaf.y0 + 10}
-          fontSize={12}
-          textAnchor="start"
-          alignmentBaseline="hanging"
-          fill="black"
-          className="font-bold"
-        >
-          {leaf.data.name}
-        </text>
-        <text
-          x={leaf.x0 + 3}
-          y={leaf.y0 + 25}
-          fontSize={12}
-          textAnchor="start"
-          alignmentBaseline="hanging"
-          fill="black"
-          className="font-light"
-        >
-          {leaf.data.value}
-        </text>
-      </g>
-    );
-  });
+  const svg = d3
+    .select(graphRef.current)
+    .attr("width", width)
+    .attr("height", height)
+    .attr("style", `max-width: 100%; height: auto; font: 12px sans-serif;`);
 
-  return (
-    <div>
-      <svg width={width} height={height}>
-        {allShapes}
-      </svg>
-    </div>
-  );
+  useMemo(() => {
+    svg.selectAll("g").remove();
+
+    root
+      .leaves()
+      .reverse()
+      .forEach((leaf) => {
+        const group = svg.append("g");
+        group
+          .append("rect")
+          .attr("x", leaf.x0)
+          .attr("y", leaf.y0)
+          .attr("width", leaf.x1 - leaf.x0)
+          .attr("height", leaf.y1 - leaf.y0)
+          .attr("stroke", "transparent")
+          .attr("rx", 4)
+          .attr("ry", 4)
+          .attr("fill", () => colorScale(leaf.parent?.data.name || ""));
+
+        group
+          .append("circle")
+          .attr("cx", leaf.x1)
+          .attr("cy", leaf.y1)
+          .attr("r", 6)
+          .attr("fill", () => colorScale(leaf.parent?.data.name || ""))
+          .attr("stroke", "white")
+          .call((circle) =>
+            circle.call(
+              d3.drag().on("drag", (e) => {
+                console.log(e.y);
+              })
+            )
+          );
+        group
+          .append("text")
+          .attr("x", leaf.x0 + 6)
+          .attr("y", leaf.y0 + 13)
+          .attr("font-size", 12)
+          .attr("text-anchor", "start")
+          .attr("alignment-baseline", "hanging")
+          .attr("fill", "black")
+          .attr("font-weight", "bold")
+          .text(leaf.data.name || "");
+
+        group
+          .append("text")
+          .attr("x", leaf.x0 + 6)
+          .attr("y", leaf.y0 + 28)
+          .attr("font-size", 12)
+          .attr("text-anchor", "start")
+          .attr("alignment-baseline", "hanging")
+          .attr("fill", "black")
+          .text(leaf.data.value || "");
+      });
+  }, [root]);
+
+  return <svg width={width} height={height} ref={graphRef} />;
 }
 
 export { DraggablePieChart, DraggableLineChart, DraggableTreeMap };
