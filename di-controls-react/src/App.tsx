@@ -8,6 +8,9 @@ import {
 import Slider from "./components/Slider";
 
 function App() {
+  const [chartRadius /*setChartRadius*/] = useState(500);
+  const [isDonut /*setIsDonut*/] = useState(0);
+
   const total = 1200;
   const numSlices = 7;
 
@@ -18,20 +21,6 @@ function App() {
   const [section5Value, setSection5Value] = useState(total / numSlices);
   const [section6Value, setSection6Value] = useState(total / numSlices);
   const [section7Value, setSection7Value] = useState(total / numSlices);
-
-  const [point1, setPoint1] = useState(90);
-  const [point2, setPoint2] = useState(12);
-  const [point3, setPoint3] = useState(34);
-  const [point4, setPoint4] = useState(53);
-  const [point5, setPoint5] = useState(52);
-  const [point6, setPoint6] = useState(9);
-  const [point7, setPoint7] = useState(18);
-  const [point8, setPoint8] = useState(78);
-  const [point9, setPoint9] = useState(28);
-  const [point10, setPoint10] = useState(34);
-
-  const [chartRadius /*setChartRadius*/] = useState(500);
-  const [isDonut /*setIsDonut*/] = useState(0);
 
   const graph1 = [
     { name: "1", value: section1Value, set: setSection1Value },
@@ -65,6 +54,17 @@ function App() {
     },
   ];
 
+  const [point1, setPoint1] = useState(90);
+  const [point2, setPoint2] = useState(12);
+  const [point3, setPoint3] = useState(34);
+  const [point4, setPoint4] = useState(53);
+  const [point5, setPoint5] = useState(52);
+  const [point6, setPoint6] = useState(9);
+  const [point7, setPoint7] = useState(18);
+  const [point8, setPoint8] = useState(78);
+  const [point9, setPoint9] = useState(28);
+  const [point10, setPoint10] = useState(34);
+
   const graph3 = [
     { name: "1", value: point1, set: setPoint1 },
     { name: "2", value: point2, set: setPoint2 },
@@ -78,33 +78,65 @@ function App() {
     { name: "10", xValue: 18, value: point10, set: setPoint10 },
   ];
 
+  const [nodeA, setNodeA] = useState(90);
+  const [nodeB, setNodeB] = useState(15);
+  const [nodeC, setNodeC] = useState(30);
+  const [nodeD, setNodeD] = useState(47);
+  const [nodeE, setNodeE] = useState(32);
+  const [nodeF, setNodeF] = useState(26);
+  const [nodeG, setNodeG] = useState(13);
+  const [nodeH, setNodeH] = useState(26);
+  const [nodeI, setNodeI] = useState(100);
+  const [nodeJ, setNodeJ] = useState(67);
+  const [nodeK, setNodeK] = useState(22);
+  const [nodeL, setNodeL] = useState(30);
+  const [nodeM, setNodeM] = useState(80);
+  const [nodeN, setNodeN] = useState(45);
+  const [nodeO, setNodeO] = useState(19);
+  const [nodeP, setNodeP] = useState(20);
+
   const treemap = {
     children: [
       {
         name: "group1",
         children: [
-          { name: "a", value: 90 },
-          { name: "b", value: 15 },
-          { name: "c", value: 30 },
-          { name: "d", value: 47 },
+          {
+            name: "group1a",
+            children: [
+              { name: "a", value: nodeA, set: setNodeA },
+              { name: "b", value: nodeB, set: setNodeB },
+              { name: "c", value: nodeC, set: setNodeC },
+              { name: "d", value: nodeD, set: setNodeD },
+            ],
+          },
         ],
       },
       {
         name: "group2",
+        color: d3.color("lightgreen"),
         children: [
-          { name: "e", value: 32 },
-          { name: "f", value: 26 },
-          { name: "g", value: 13 },
+          { name: "e", value: nodeE, set: setNodeE },
+          { name: "f", value: nodeF, set: setNodeF },
+          { name: "g", value: nodeG, set: setNodeG },
         ],
       },
       {
         name: "group3",
         children: [
-          { name: "h", value: 26 },
-          { name: "i", value: 100 },
-          { name: "j", value: 67 },
-          { name: "k", value: 22 },
-          { name: "l", value: 30 },
+          { name: "h", value: nodeH, set: setNodeH },
+          { name: "i", value: nodeI, set: setNodeI },
+          { name: "j", value: nodeJ, set: setNodeJ },
+          { name: "k", value: nodeK, set: setNodeK },
+          { name: "l", value: nodeL, set: setNodeL },
+        ],
+      },
+      {
+        name: "group4",
+        children: [
+          { name: "m", value: nodeM, set: setNodeM },
+          { name: "n", value: nodeN, set: setNodeN },
+          { name: "o", value: nodeO, set: setNodeO },
+          { name: "p", value: nodeP, set: setNodeP },
         ],
       },
     ],
@@ -130,7 +162,7 @@ function App() {
         textColor="white"
         // stroke="#ff3399"
       />
-      <DraggablePieChart data={graph3} />
+      {/* <DraggablePieChart data={graph3} /> */}
       <DraggableLineChart
         data={graph3}
         isAreaChart={true}
@@ -151,7 +183,9 @@ function App() {
           />
         ))}
       </div>
-      <DraggableTreeMap data={treemap} />
+      <div>
+        <DraggableTreeMap data={treemap} />
+      </div>
     </>
   );
 }

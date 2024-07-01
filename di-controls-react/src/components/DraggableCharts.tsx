@@ -1,6 +1,7 @@
 import Color from "color";
 import * as d3 from "d3";
 import { RefObject, useMemo, useRef, useState } from "react";
+import Slider from "./Slider";
 
 interface d3Interpolate {
   (t: number): string;
@@ -39,6 +40,7 @@ interface DraggableAreaChartProps {
 type Node = {
   name?: string;
   value?: number;
+  color?: d3.RGBColor | d3.HSLColor | null;
   set?: React.Dispatch<React.SetStateAction<number>>;
   children?: Array<Node>;
 };
@@ -462,6 +464,8 @@ function DraggableTreeMap({
   d3ColorScheme = d3.interpolateSpectral,
 }: TreemapProps) {
   const graphRef = useRef(null);
+  const [, setCurrentValue] = useState(0);
+  const [currentSection, setCurrentSection] = useState<Node>();
   const hierarchy = useMemo(() => {
     return d3.hierarchy(data).sum((d) => d.value || 0);
   }, [data]);
@@ -483,9 +487,16 @@ function DraggableTreeMap({
     );
 
   const root = useMemo(() => {
-    const treeGenerator = d3.treemap<Node>().size([width, height]).padding(4);
+    const treeGenerator = d3
+      .treemap<Node>()
+      .size([width, height])
+      .padding(4)
+      .paddingTop(20);
     return treeGenerator(hierarchy);
   }, [hierarchy, width, height]);
+  const descendants = root.descendants();
+
+  const total = root.leaves().reduce((acc, curr) => acc + (curr.value || 0), 0);
 
   const svg = d3
     .select(graphRef.current)
@@ -496,60 +507,68 @@ function DraggableTreeMap({
   useMemo(() => {
     svg.selectAll("g").remove();
 
-    root
-      .leaves()
-      .reverse()
-      .forEach((leaf) => {
-        const group = svg.append("g");
+    descendants.forEach((child) => {
+      if (child.data.name) {
+        if (!child.data.color)
+          child.data.color =
+            child.parent === root
+              ? d3.color(colorScale(child.data.name || ""))
+              : child.parent?.data.color?.brighter();
+        const group = svg.append("g").attr("display", "flex");
         group
           .append("rect")
-          .attr("x", leaf.x0)
-          .attr("y", leaf.y0)
-          .attr("width", leaf.x1 - leaf.x0)
-          .attr("height", leaf.y1 - leaf.y0)
+          .attr("x", child.x0)
+          .attr("y", child.y0)
+          .attr("width", child.x1 - child.x0)
+          .attr("height", child.y1 - child.y0)
           .attr("stroke", "transparent")
           .attr("rx", 4)
           .attr("ry", 4)
-          .attr("fill", () => colorScale(leaf.parent?.data.name || ""));
+          .attr("fill", child.data.color + "" || "")
+          .on("click", () => setCurrentSection(child.data));
 
         group
-          .append("circle")
-          .attr("cx", leaf.x1)
-          .attr("cy", leaf.y1)
-          .attr("r", 6)
-          .attr("fill", () => colorScale(leaf.parent?.data.name || ""))
-          .attr("stroke", "white")
-          .call((circle) =>
-            circle.call(
-              d3.drag().on("drag", (e) => {
-                console.log(e.y);
-              })
-            )
-          );
-        group
           .append("text")
-          .attr("x", leaf.x0 + 6)
-          .attr("y", leaf.y0 + 13)
+          .attr("x", child.x0 + 6)
+          .attr("y", child.y0 + 13)
           .attr("font-size", 12)
           .attr("text-anchor", "start")
-          .attr("alignment-baseline", "hanging")
+          // .attr("alignment-baseline", "hanging")
           .attr("fill", "black")
           .attr("font-weight", "bold")
-          .text(leaf.data.name || "");
+          .text(child.data.name || "");
 
         group
           .append("text")
-          .attr("x", leaf.x0 + 6)
-          .attr("y", leaf.y0 + 28)
+          .attr("x", child.x0 + 6)
+          .attr("y", child.y0 + 28)
           .attr("font-size", 12)
           .attr("text-anchor", "start")
           .attr("alignment-baseline", "hanging")
           .attr("fill", "black")
-          .text(leaf.data.value || "");
-      });
-  }, [root]);
+          .text(child.data.value || "");
+      }
+    });
+  }, [svg, descendants, root, colorScale]);
 
-  return <svg width={width} height={height} ref={graphRef} />;
+  return (
+    <>
+      {currentSection && (
+        <Slider
+          title={currentSection.name || ""}
+          min={0}
+          max={total}
+          step={1}
+          currentValue={
+            descendants.find((node) => node.data.name === currentSection.name)
+              ?.value || 0
+          }
+          setCurrentValue={currentSection.set || setCurrentValue}
+        />
+      )}
+      <svg width={width} height={height} ref={graphRef} />
+    </>
+  );
 }
 
 export { DraggablePieChart, DraggableLineChart, DraggableTreeMap };

@@ -21,9 +21,7 @@ function Slider({
 }: SliderProps) {
   return (
     <>
-      {title}
-      <br />
-      {currentValue}
+      {`${title}: ${currentValue}`}
       <br />
       <input
         className={styling}
