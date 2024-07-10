@@ -1,6 +1,10 @@
 import Color from "color";
 import * as d3 from "d3";
 import { RefObject, useMemo, useRef, useState } from "react";
+<<<<<<< Updated upstream
+=======
+import { Slider } from "./BasicControls";
+>>>>>>> Stashed changes
 
 interface d3Interpolate {
   (t: number): string;
@@ -36,6 +40,24 @@ interface DraggableAreaChartProps {
   stroke?: string;
 }
 
+<<<<<<< Updated upstream
+=======
+type Node = {
+  name?: string;
+  value?: number;
+  color?: string;
+  set?: React.Dispatch<React.SetStateAction<number>>;
+  children?: Array<Node>;
+};
+
+interface TreemapProps {
+  width?: number;
+  height?: number;
+  data: Node;
+  d3ColorScheme?: d3Interpolate;
+}
+
+>>>>>>> Stashed changes
 /**
  *
  * @param {Object} data Array of objects of type {name, color?, value, set} where 'value' and 'set' are derived from useState()
@@ -45,7 +67,6 @@ interface DraggableAreaChartProps {
  * @param {string=} textColor OPTIONAL, override for text color, default adjusts text color based on luminosity of each slice
  * @param {string=} stroke OPTIONAL, override for stroke color around elements, default white
  * @param {boolean} [onlyAdjustSubsequentSlices=false] OPTIONAL, override to only adjust slices ocurring 'after' the one being dragged, order starts from the top right element and then moves clockwise.  Can improve precision but causes all slices 'before' the one being edited to not readjust automatically, default false
- * @returns pain
  */
 function DraggablePieChart({
   data,
@@ -441,4 +462,123 @@ function DraggableLineChart({
   return <svg width={width} height={height} ref={graphRef} />;
 }
 
+<<<<<<< Updated upstream
 export { DraggablePieChart, DraggableLineChart };
+=======
+function DraggableTreeMap({
+  width = 500,
+  height = 500,
+  data,
+  d3ColorScheme = d3.interpolateSpectral,
+}: TreemapProps) {
+  const graphRef = useRef(null);
+  const [, setCurrentValue] = useState(0);
+  const [currentSection, setCurrentSection] = useState<Node>();
+  const hierarchy = useMemo(() => {
+    return d3.hierarchy(data).sum((d) => d.value || 0);
+  }, [data]);
+
+  // List of item of level 1 (just under root) & related color scale
+  const firstLevelGroups = hierarchy?.children?.map(
+    (child) => child.data.name || ""
+  );
+  const colorScale = d3
+    .scaleOrdinal<string>()
+    .domain(firstLevelGroups || [])
+    .range(
+      d3
+        .quantize(
+          (t) => d3ColorScheme(t * 0.8 + 0.1),
+          data.children?.length || 0
+        )
+        .reverse()
+    );
+
+  const root = useMemo(() => {
+    const treeGenerator = d3
+      .treemap<Node>()
+      .size([width, height])
+      .padding(4)
+      .paddingTop(20);
+    return treeGenerator(hierarchy);
+  }, [hierarchy, width, height]);
+  const descendants = root.descendants();
+
+  const total = root.leaves().reduce((acc, curr) => acc + (curr.value || 0), 0);
+
+  const svg = d3
+    .select(graphRef.current)
+    .attr("width", width)
+    .attr("height", height)
+    .attr("style", `max-width: 100%; height: auto; font: 12px sans-serif;`);
+
+  useMemo(() => {
+    svg.selectAll("g").remove();
+
+    descendants.forEach((child) => {
+      if (child.data.name) {
+        if (!child.data.color)
+          child.data.color =
+            child.parent === root
+              ? d3.color(colorScale(child.data.name || "")) + ""
+              : d3.color(child.parent?.data.color || "")?.brighter(0.5) + "";
+
+        const group = svg.append("g").attr("display", "flex");
+        group
+          .append("rect")
+          .attr("x", child.x0)
+          .attr("y", child.y0)
+          .attr("width", child.x1 - child.x0)
+          .attr("height", child.y1 - child.y0)
+          .attr("rx", 4)
+          .attr("ry", 4)
+          .attr("fill", child.data.color)
+          .on("click", () => setCurrentSection(child.data));
+
+        group
+          .append("text")
+          .attr("x", child.x0 + 6)
+          .attr("y", child.y0 + 13)
+          .attr("font-size", 12)
+          .attr("text-anchor", "start")
+          // .attr("alignment-baseline", "hanging")
+          .attr("fill", "black")
+          .attr("font-weight", "bold")
+          .text(child.data.name || "");
+
+        group
+          .append("text")
+          .attr("x", child.x0 + 6)
+          .attr("y", child.y0 + 28)
+          .attr("font-size", 12)
+          .attr("fill-opacity", 0.7)
+          .attr("text-anchor", "start")
+          .attr("alignment-baseline", "hanging")
+          .attr("fill", "black")
+          .text(child.data.value || "");
+      }
+    });
+  }, [svg, descendants, root, colorScale]);
+
+  return (
+    <>
+      {currentSection && (
+        <Slider
+          title={currentSection.name || ""}
+          min={0}
+          max={total}
+          step={1}
+          currentValue={
+            descendants.find((node) => node.data.name === currentSection.name)
+              ?.value || 0
+          }
+          setCurrentValue={currentSection.set || setCurrentValue}
+        />
+      )}
+      <svg width={width} height={height} ref={graphRef} />
+    </>
+  );
+}
+
+export { DraggablePieChart, DraggableLineChart, DraggableTreeMap };
+>>>>>>> Stashed changes
