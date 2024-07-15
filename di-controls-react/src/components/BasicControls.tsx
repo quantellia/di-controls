@@ -1,7 +1,7 @@
 import "../index.css";
 
 interface SliderProps {
-  title: string;
+  title?: string;
   styling?: string;
   min: number;
   max: number;
@@ -29,9 +29,11 @@ function Slider({
 }: SliderProps) {
   return (
     <>
-      <p
-        style={{ font: "12px sans-serif", margin: "4px" }}
-      >{`${title}: ${currentValue}`}</p>
+      {title && (
+        <p
+          style={{ font: "12px sans-serif", margin: "4px" }}
+        >{`${title}: ${currentValue}`}</p>
+      )}
       <input
         className={styling}
         type="range"
@@ -56,7 +58,13 @@ function RadioButtonGroup({
   setCurrentValue,
 }: RadioButtonGroupProps) {
   return (
-    <fieldset style={{ display: vertical ? "block" : "flex" }}>
+    <fieldset
+      style={{
+        display: vertical ? "block" : "flex",
+        height: "fit-content",
+        width: "fit-content",
+      }}
+    >
       <legend>{title}</legend>
       {data.map((value) => (
         <>
@@ -70,6 +78,7 @@ function RadioButtonGroup({
                 setCurrentValue(value);
               }}
               checked={currentValue === value}
+              readOnly
             />
             <label htmlFor={value}>{value}</label>
           </div>

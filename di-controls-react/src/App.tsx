@@ -1,238 +1,287 @@
-import * as d3 from "d3";
 import { useState } from "react";
-import {
-  DraggablePieChart,
-  DraggableLineChart,
-} from "./components/DraggableCharts";
-import { Slider, RadioButtonGroup } from "./components/BasicControls";
 import { Gauge } from "./components/DataVisualizations";
+import { RadioButtonGroup, Slider } from "./components/BasicControls";
 
 function App() {
-  const total = 1200;
-  const numSlices = 7;
+  const [spring2023Crop, setSpring2023Crop] = useState("Peanuts");
+  const [spring2023FumigantNematicide, setSpring2023FumigantNematicide] =
+    useState("Apply fumigant nematicide");
+  const [spring2023NonFumigantNematicide, setSpring2023NonFumigantNematicide] =
+    useState("Do not apply non-fumigant nematicide");
+  const [spring2024FumigantNematicide, setSpring2024FumigantNematicide] =
+    useState("Apply fumigant nematicide");
+  const [spring2024NonFumigantNematicide, setSpring2024NonFumigantNematicide] =
+    useState("Do not apply non-fumigant nematicide");
 
-  const [section1Value, setSection1Value] = useState(total / numSlices);
-  const [section2Value, setSection2Value] = useState(total / numSlices);
-  const [section3Value, setSection3Value] = useState(total / numSlices);
-  const [section4Value, setSection4Value] = useState(total / numSlices);
-  const [section5Value, setSection5Value] = useState(total / numSlices);
-  const [section6Value, setSection6Value] = useState(total / numSlices);
-  const [section7Value, setSection7Value] = useState(total / numSlices);
+  const [costOfNematicides, setCostOfNematicides] = useState(219);
+  const [otherCostsForSweets, setOtherCostsForSweets] = useState(2090);
+  const [costForPeanuts, setCostForPeanuts] = useState(870);
 
-  const [point1, setPoint1] = useState(90);
-  const [point2, setPoint2] = useState(12);
-  const [point3, setPoint3] = useState(34);
-  const [point4, setPoint4] = useState(53);
-  const [point5, setPoint5] = useState(52);
-  const [point6, setPoint6] = useState(9);
-  const [point7, setPoint7] = useState(18);
-  const [point8, setPoint8] = useState(78);
-  const [point9, setPoint9] = useState(28);
-  const [point10, setPoint10] = useState(34);
+  const [mIncognita2022, setMIncognita2022] = useState(137);
+  const [mEnterlobii2022Found, setMEnterlobii2022Found] = useState("Found");
 
-  const [chartRadius /*setChartRadius*/] = useState(500);
-  const [isDonut /*setIsDonut*/] = useState(0);
-
-  const graph1 = [
-    { name: "1", value: section1Value, set: setSection1Value },
-    { name: "2", value: section2Value, set: setSection2Value },
-    { name: "3", value: section3Value, set: setSection3Value },
+  const bestPracticesOptions = [
+    "Followed all recommended practices",
+    "Followed most recommended practices",
+    "Did not follow recommended practices",
   ];
-  const graph2 = [
-    {
-      name: "4",
-      value: section4Value,
-      color: "#ffd166",
-      set: setSection4Value,
-    },
-    {
-      name: "5",
-      value: section5Value,
-      color: "#fb8500",
-      set: setSection5Value,
-    },
-    {
-      name: "6",
-      value: section6Value,
-      color: "rgb(209, 60, 75)",
-      set: setSection6Value,
-    },
-    {
-      name: "7",
-      value: section7Value,
-      color: "#EF476F",
-      set: setSection7Value,
-    },
-  ];
+  const [soilTemp, setSoilTemp] = useState(78);
+  const [fumigantBestPractices, setFumigantBestPractices] = useState(
+    bestPracticesOptions[0]
+  );
+  const [nonFumigantBestPractices, setNonFumigantBestPractices] = useState(
+    bestPracticesOptions[0]
+  );
 
-  const graph3 = [
-    { value: point1, set: setPoint1 },
-    { value: point2, set: setPoint2 },
-<<<<<<< Updated upstream
-    { value: point3, set: setPoint3 },
-    { value: point4, set: setPoint4 },
-    { value: point5, set: setPoint5 },
-    { value: point6, set: setPoint6 },
-    { value: point7, set: setPoint7 },
-    { value: point8, set: setPoint8 },
-    { value: point9, set: setPoint9 },
-    { xValue: 18, value: point10, set: setPoint10 },
-  ];
+  const [mIncognitaSpring2023, setMIncognitaSpring2023] =
+    useState(mIncognita2022);
+  const [mEnterlobiiSpring2023Present, setMEnterlobiiSpring2023Present] =
+    useState(true);
 
-=======
-    { name: "3", value: point3, set: setPoint3 },
-    { name: "4", value: point4, set: setPoint4 },
-    { name: "5", value: point5, set: setPoint5 },
-    { name: "6", value: point6, set: setPoint6 },
-    { name: "7", value: point7, set: setPoint7 },
-    { name: "8", value: point8, set: setPoint8 },
-    { name: "9", value: point9, set: setPoint9 },
-    { name: "10", xValue: 18, value: point10, set: setPoint10 },
-  ];
+  const [mIncognitaFall2023, setMIncognitaFall2023] = useState(mIncognita2022);
+  const [mEnterlobiiFall2023Present, setMEnterlobiiFall2023Present] =
+    useState(true);
 
-  const [nodeA, setNodeA] = useState(90);
-  const [nodeB, setNodeB] = useState(15);
-  const [nodeC, setNodeC] = useState(30);
-  const [nodeD, setNodeD] = useState(47);
-  const [nodeE, setNodeE] = useState(32);
-  const [nodeF, setNodeF] = useState(26);
-  const [nodeG, setNodeG] = useState(13);
-  const [nodeH, setNodeH] = useState(26);
-  const [nodeI, setNodeI] = useState(100);
-  const [nodeJ, setNodeJ] = useState(67);
-  const [nodeK, setNodeK] = useState(22);
-  const [nodeL, setNodeL] = useState(30);
-  const [nodeM, setNodeM] = useState(80);
-  const [nodeN, setNodeN] = useState(45);
-  const [nodeO, setNodeO] = useState(19);
-  const [nodeP, setNodeP] = useState(20);
+  const [mIncognitaSpring2024, setMIncognitaSpring2024] =
+    useState(mIncognita2022);
+  const [mEnterlobiiSpring2024Present, setMEnterlobiiSpring2024Present] =
+    useState(true);
 
-  const [radioGroupSelection, setRadioGroupSelection] = useState("test1");
+  const [profit2023, setProfit2023] = useState(410);
+  const [profit2024, setProfit2024] = useState(290);
+  const [totalProfit, setTotalProfit] = useState(profit2023 + profit2024);
 
-  const treemap = {
-    children: [
-      {
-        name: "group1",
-        children: [
-          {
-            name: "group1a",
-            children: [
-              { name: "a", value: nodeA, set: setNodeA },
-              { name: "b", value: nodeB, set: setNodeB },
-            ],
-          },
-          {
-            name: "group1b",
-            children: [
-              { name: "c", value: nodeC, set: setNodeC },
-              { name: "d", value: nodeD, set: setNodeD },
-            ],
-          },
-        ],
-      },
-      {
-        name: "group2",
-        color: "mediumseagreen",
-        children: [
-          { name: "e", value: nodeE, set: setNodeE },
-          { name: "f", value: nodeF, set: setNodeF },
-          { name: "g", value: nodeG, set: setNodeG },
-        ],
-      },
-      {
-        name: "group3",
-        children: [
-          { name: "h", value: nodeH, set: setNodeH },
-          { name: "i", value: nodeI, set: setNodeI },
-          { name: "j", value: nodeJ, set: setNodeJ },
-          { name: "k", value: nodeK, set: setNodeK },
-          { name: "l", value: nodeL, set: setNodeL },
-        ],
-      },
-      {
-        name: "group4",
-        children: [
-          { name: "m", value: nodeM, set: setNodeM },
-          { name: "n", value: nodeN, set: setNodeN },
-          { name: "o", value: nodeO, set: setNodeO },
-          { name: "p", value: nodeP, set: setNodeP },
-        ],
-      },
-    ],
-  };
-
->>>>>>> Stashed changes
   return (
-    <>
-      <DraggablePieChart
-        data={graph1}
-        radius={chartRadius}
-        isDonut={!!isDonut}
-        onlyAdjustSubsequentSlices={true}
-        d3ColorScheme={d3.interpolateBuPu}
-        // textColor="white"
-        stroke="#323232"
-      />
-      <DraggablePieChart
-        data={graph2}
-        radius={chartRadius}
-        isDonut={!!isDonut}
-        onlyAdjustSubsequentSlices={false}
-        // d3ColorScheme={d3.interpolateBuPu}
-        textColor="white"
-        // stroke="#ff3399"
-      />
-      <DraggableLineChart
-        data={[...graph1, ...graph2, ...graph3]}
-        isAreaChart={true}
-        color="rgb(12, 98, 145)"
-        areaColor="rgba(12, 98, 145, 0.3)"
-        stroke="none"
-        width={900}
-      />
-      <div style={{ display: "inline flow-root" }}>
-        {[...graph3].map((point, index) => (
-          <Slider
-            title={`Point ${index} value`}
-            min={0}
-            max={250}
-            step={1}
-            currentValue={point.value}
-            setCurrentValue={point.set}
+    <div style={{ display: "flex", gap: 32 }}>
+      <div>
+        <fieldset style={{ width: "fit-content", height: "fit-content" }}>
+          <legend>Spring 2023</legend>
+          <RadioButtonGroup
+            title="Crop to plant (assumes the alternate crop in 2024)"
+            data={["Peanuts", "Sweetpotatoes"]}
+            currentValue={spring2023Crop}
+            setCurrentValue={setSpring2023Crop}
           />
-        ))}
+          <RadioButtonGroup
+            title="Fumigant Nematicide 2023"
+            data={[
+              "Apply fumigant nematicide",
+              "Do not apply non-fumigant nematicide",
+            ]}
+            currentValue={spring2023FumigantNematicide}
+            setCurrentValue={setSpring2023FumigantNematicide}
+          />
+          <RadioButtonGroup
+            title="Non-Fumigant Nematicide 2023"
+            data={[
+              "Apply fumigant nematicide",
+              "Do not apply non-fumigant nematicide",
+            ]}
+            currentValue={spring2023NonFumigantNematicide}
+            setCurrentValue={setSpring2023NonFumigantNematicide}
+          />
+        </fieldset>
+        <fieldset>
+          <legend>Spring 2024</legend>
+          <RadioButtonGroup
+            title="Fumigant Nematicide 2024"
+            data={[
+              "Apply fumigant nematicide",
+              "Do not apply non-fumigant nematicide",
+            ]}
+            currentValue={spring2024FumigantNematicide}
+            setCurrentValue={setSpring2024FumigantNematicide}
+          />
+          <RadioButtonGroup
+            title="Non-Fumigant Nematicide 2024"
+            data={[
+              "Apply fumigant nematicide",
+              "Do not apply non-fumigant nematicide",
+            ]}
+            currentValue={spring2024NonFumigantNematicide}
+            setCurrentValue={setSpring2024NonFumigantNematicide}
+          />
+        </fieldset>
       </div>
-<<<<<<< Updated upstream
 
-      <p></p>
-=======
-      <div>
-        <DraggableTreeMap data={treemap} />
+      <fieldset style={{ height: "fit-content", display: "grid" }}>
+        <legend>Costs for field ($/acre)</legend>
+        {[
+          {
+            title: "Cost of nematicides ($)",
+            max: 250,
+            currentValue: costOfNematicides,
+            set: setCostOfNematicides,
+          },
+          {
+            title: "Other costs for sweets ($)",
+            min: 1800,
+            max: 2200,
+            currentValue: otherCostsForSweets,
+            set: setOtherCostsForSweets,
+          },
+          {
+            title: "Cost of nematicides ($)",
+            min: 780,
+            max: 1000,
+            currentValue: costForPeanuts,
+            set: setCostForPeanuts,
+          },
+        ].map((gauge) => (
+          <>
+            <Gauge
+              min={gauge.min || 0}
+              max={gauge.max}
+              radius={300}
+              title={gauge.title}
+              currentValue={gauge.currentValue}
+            />
+            <Slider
+              min={gauge.min || 0}
+              max={gauge.max}
+              step={1}
+              currentValue={gauge.currentValue}
+              setCurrentValue={gauge.set}
+            />
+          </>
+        ))}
+      </fieldset>
+
+      <div style={{ display: "grid", gap: 24 }}>
+        <div style={{ display: "flex" }}>
+          <fieldset
+            style={{
+              height: "fit-content",
+              width: "fit-content",
+            }}
+          >
+            <legend>Root knot nematodes in field fall 2022</legend>
+            <RadioButtonGroup
+              title="M. incognita found"
+              data={["Found", "Not Found"]}
+              currentValue={mEnterlobii2022Found}
+              setCurrentValue={setMEnterlobii2022Found}
+            />
+            <div style={{ display: "grid", width: "fit-content" }}>
+              <Gauge
+                min={0}
+                max={150}
+                radius={300}
+                title={`M. incognita per 500cc`}
+                currentValue={mIncognita2022}
+              />
+              <Slider
+                min={0}
+                max={150}
+                step={1}
+                currentValue={mIncognita2022}
+                setCurrentValue={setMIncognita2022}
+              />
+            </div>
+          </fieldset>
+          <fieldset style={{ display: "flex" }}>
+            <legend>Fumigant</legend>
+            <div style={{ display: "grid", height: "fit-content" }}>
+              <Gauge
+                min={0}
+                max={102}
+                radius={300}
+                title={`Avg Soil Temp (°F)`}
+                currentValue={soilTemp}
+              />
+              <Slider
+                min={0}
+                max={102}
+                step={1}
+                currentValue={soilTemp}
+                setCurrentValue={setSoilTemp}
+              />
+            </div>
+            <div>
+              {[
+                {
+                  title: "Fumigant best practices",
+                  currentValue: fumigantBestPractices,
+                  set: setFumigantBestPractices,
+                },
+                {
+                  title: "Non-fumigant best practices",
+                  currentValue: nonFumigantBestPractices,
+                  set: setNonFumigantBestPractices,
+                },
+              ].map((buttonGroup) => (
+                <RadioButtonGroup
+                  title={buttonGroup.title}
+                  data={bestPracticesOptions}
+                  currentValue={buttonGroup.currentValue}
+                  setCurrentValue={buttonGroup.set}
+                />
+              ))}
+            </div>
+          </fieldset>
+        </div>
+        <div style={{ display: "flex" }}>
+          {[
+            {
+              title: "Spring 2023",
+              currentValue: mIncognitaSpring2023,
+              present: mEnterlobiiSpring2023Present,
+            },
+            {
+              title: "Fall 2023",
+              currentValue: mIncognitaFall2023,
+              present: mEnterlobiiFall2023Present,
+            },
+            {
+              title: "Spring 2024",
+              currentValue: mIncognitaSpring2024,
+              present: mEnterlobiiSpring2024Present,
+            },
+          ].map((gauge) => (
+            <fieldset style={{ height: "fit-content" }}>
+              <legend>{gauge.title}</legend>
+              <Gauge
+                min={0}
+                max={150}
+                radius={300}
+                title={`M. incognita per 500cc`}
+                currentValue={gauge.currentValue}
+              />
+              <p>{`M. enterlobii ${
+                gauge.present ? "present" : "not present"
+              }`}</p>
+            </fieldset>
+          ))}
+          <div>
+            <fieldset>
+              <legend>Profits from this field 2023 and 2024 ($/acre)</legend>
+              {[
+                { title: "2023 Profits", currentValue: profit2023 },
+                { title: "2024 Profits", currentValue: profit2024 },
+              ].map((gauge) => (
+                <Gauge
+                  min={0}
+                  max={3000}
+                  radius={300}
+                  title={gauge.title}
+                  currentValue={gauge.currentValue}
+                />
+              ))}
+            </fieldset>
+            <fieldset>
+              <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
+              <Gauge
+                min={0}
+                max={3000}
+                radius={300}
+                title={"Total Profit"}
+                currentValue={totalProfit}
+              />
+            </fieldset>
+          </div>
+        </div>
       </div>
-      <div>
-        <RadioButtonGroup
-          data={["test1", "test2", "test3"]}
-          title="test group"
-          currentValue={radioGroupSelection}
-          setCurrentValue={(value) => setRadioGroupSelection(value)}
-        />
-        <RadioButtonGroup
-          data={["test1", "test2", "test3"]}
-          title="test 2"
-          currentValue={radioGroupSelection}
-          vertical={false}
-          setCurrentValue={(value) => setRadioGroupSelection(value)}
-        />
-      </div>
-      <Gauge
-        title="nodeC"
-        min={0}
-        max={100}
-        currentValue={nodeC}
-        radius={200}
-      />
->>>>>>> Stashed changes
-    </>
+    </div>
   );
 }
 

@@ -1,10 +1,7 @@
 import Color from "color";
 import * as d3 from "d3";
 import { RefObject, useMemo, useRef, useState } from "react";
-<<<<<<< Updated upstream
-=======
 import { Slider } from "./BasicControls";
->>>>>>> Stashed changes
 
 interface d3Interpolate {
   (t: number): string;
@@ -40,8 +37,6 @@ interface DraggableAreaChartProps {
   stroke?: string;
 }
 
-<<<<<<< Updated upstream
-=======
 type Node = {
   name?: string;
   value?: number;
@@ -57,7 +52,6 @@ interface TreemapProps {
   d3ColorScheme?: d3Interpolate;
 }
 
->>>>>>> Stashed changes
 /**
  *
  * @param {Object} data Array of objects of type {name, color?, value, set} where 'value' and 'set' are derived from useState()
@@ -462,9 +456,6 @@ function DraggableLineChart({
   return <svg width={width} height={height} ref={graphRef} />;
 }
 
-<<<<<<< Updated upstream
-export { DraggablePieChart, DraggableLineChart };
-=======
 function DraggableTreeMap({
   width = 500,
   height = 500,
@@ -581,4 +572,3 @@ function DraggableTreeMap({
 }
 
 export { DraggablePieChart, DraggableLineChart, DraggableTreeMap };
->>>>>>> Stashed changes
