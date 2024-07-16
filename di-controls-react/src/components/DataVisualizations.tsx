@@ -1,15 +1,29 @@
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 
+interface d3Interpolate {
+  (t: number): string;
+}
+
 interface GaugeProps {
   title: string;
   radius?: number;
   min: number;
   max: number;
   currentValue: number;
+  d3ColorScheme?: d3Interpolate;
+  reverseColorScheme?: boolean;
 }
 
-function Gauge({ currentValue, title, min, max, radius = 500 }: GaugeProps) {
+function Gauge({
+  currentValue,
+  title,
+  min,
+  max,
+  radius = 500,
+  d3ColorScheme = d3.interpolateHslLong("red", "limegreen"),
+  reverseColorScheme = false,
+}: GaugeProps) {
   const gaugeRef = useRef(null);
   const width = radius;
   const height = radius / 2;
@@ -20,12 +34,11 @@ function Gauge({ currentValue, title, min, max, radius = 500 }: GaugeProps) {
   const currentAngle =
     Math.min((currentValue - min) / (max - min), max) * Math.PI;
   const smallFont = `font: ${Math.max(radius / 30, 8)}px sans-serif;`;
-  // const color = d3
-  //   .scaleOrdinal()
-  //   // .domain(data.map((d) => d.name))
-  //   .range(
-  //     d3.quantize((t) => d3.interpolateTurbo(t + 0.5), min - max).reverse()
-  //   );
+  const data = [...Array(max - min).keys()];
+  const color = d3
+    .scaleOrdinal()
+    .domain(data.map((d) => d.toString()))
+    .range(d3.quantize((t) => d3ColorScheme(t - 0.1), data.length));
 
   useEffect(() => {
     const svg = d3
@@ -58,7 +71,17 @@ function Gauge({ currentValue, title, min, max, radius = 500 }: GaugeProps) {
       .endAngle(startAngle + currentAngle);
 
     g.append("path").style("fill", "#ddd").attr("d", arc);
-    g.append("path").style("fill", "orange").attr("d", foregroundArc);
+    g.append("path")
+      .style(
+        "fill",
+        color(
+          (reverseColorScheme
+            ? max - currentValue - 1
+            : currentValue - min - 1
+          ).toString()
+        ) as string
+      )
+      .attr("d", foregroundArc);
 
     g.append("text")
       .attr("text-anchor", "middle")

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Gauge } from "./components/DataVisualizations";
 import { RadioButtonGroup, Slider } from "./components/BasicControls";
+import * as d3 from "d3";
 
 function App() {
   const [spring2023Crop, setSpring2023Crop] = useState("Peanuts");
@@ -52,116 +53,61 @@ function App() {
   const [totalProfit, setTotalProfit] = useState(profit2023 + profit2024);
 
   return (
-    <div style={{ display: "flex", gap: 32 }}>
-      <div>
-        <fieldset style={{ width: "fit-content", height: "fit-content" }}>
-          <legend>Spring 2023</legend>
-          <RadioButtonGroup
-            title="Crop to plant (assumes the alternate crop in 2024)"
-            data={["Peanuts", "Sweetpotatoes"]}
-            currentValue={spring2023Crop}
-            setCurrentValue={setSpring2023Crop}
-          />
-          <RadioButtonGroup
-            title="Fumigant Nematicide 2023"
-            data={[
-              "Apply fumigant nematicide",
-              "Do not apply non-fumigant nematicide",
-            ]}
-            currentValue={spring2023FumigantNematicide}
-            setCurrentValue={setSpring2023FumigantNematicide}
-          />
-          <RadioButtonGroup
-            title="Non-Fumigant Nematicide 2023"
-            data={[
-              "Apply fumigant nematicide",
-              "Do not apply non-fumigant nematicide",
-            ]}
-            currentValue={spring2023NonFumigantNematicide}
-            setCurrentValue={setSpring2023NonFumigantNematicide}
-          />
+    <div style={{ display: "flex", gap: 32, font: "14px sans-serif" }}>
+      <div style={{ display: "flex" }}>
+        <fieldset style={{ display: "grid", alignItems: "center" }}>
+          <legend>Costs for field ($/acre)</legend>
+          {[
+            {
+              title: "Cost of nematicides ($)",
+              max: 250,
+              currentValue: costOfNematicides,
+              set: setCostOfNematicides,
+            },
+            {
+              title: "Other costs for sweets ($)",
+              min: 1800,
+              max: 2200,
+              currentValue: otherCostsForSweets,
+              set: setOtherCostsForSweets,
+            },
+            {
+              title: "Cost of nematicides ($)",
+              min: 780,
+              max: 1000,
+              currentValue: costForPeanuts,
+              set: setCostForPeanuts,
+            },
+          ].map((gauge) => (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <Gauge
+                min={gauge.min || 0}
+                max={gauge.max}
+                radius={300}
+                title={gauge.title}
+                currentValue={gauge.currentValue}
+                reverseColorScheme
+              />
+              <Slider
+                min={gauge.min || 0}
+                max={gauge.max}
+                step={1}
+                currentValue={gauge.currentValue}
+                setCurrentValue={gauge.set}
+              />
+            </div>
+          ))}
         </fieldset>
-        <fieldset>
-          <legend>Spring 2024</legend>
-          <RadioButtonGroup
-            title="Fumigant Nematicide 2024"
-            data={[
-              "Apply fumigant nematicide",
-              "Do not apply non-fumigant nematicide",
-            ]}
-            currentValue={spring2024FumigantNematicide}
-            setCurrentValue={setSpring2024FumigantNematicide}
-          />
-          <RadioButtonGroup
-            title="Non-Fumigant Nematicide 2024"
-            data={[
-              "Apply fumigant nematicide",
-              "Do not apply non-fumigant nematicide",
-            ]}
-            currentValue={spring2024NonFumigantNematicide}
-            setCurrentValue={setSpring2024NonFumigantNematicide}
-          />
-        </fieldset>
-      </div>
 
-      <fieldset style={{ height: "fit-content", display: "grid" }}>
-        <legend>Costs for field ($/acre)</legend>
-        {[
-          {
-            title: "Cost of nematicides ($)",
-            max: 250,
-            currentValue: costOfNematicides,
-            set: setCostOfNematicides,
-          },
-          {
-            title: "Other costs for sweets ($)",
-            min: 1800,
-            max: 2200,
-            currentValue: otherCostsForSweets,
-            set: setOtherCostsForSweets,
-          },
-          {
-            title: "Cost of nematicides ($)",
-            min: 780,
-            max: 1000,
-            currentValue: costForPeanuts,
-            set: setCostForPeanuts,
-          },
-        ].map((gauge) => (
-          <>
-            <Gauge
-              min={gauge.min || 0}
-              max={gauge.max}
-              radius={300}
-              title={gauge.title}
-              currentValue={gauge.currentValue}
-            />
-            <Slider
-              min={gauge.min || 0}
-              max={gauge.max}
-              step={1}
-              currentValue={gauge.currentValue}
-              setCurrentValue={gauge.set}
-            />
-          </>
-        ))}
-      </fieldset>
-
-      <div style={{ display: "grid", gap: 24 }}>
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "grid" }}>
           <fieldset
             style={{
+              display: "flex",
               height: "fit-content",
-              width: "fit-content",
+              justifyContent: "space-between",
             }}
           >
             <legend>Root knot nematodes in field fall 2022</legend>
-            <RadioButtonGroup
-              title="M. incognita found"
-              data={["Found", "Not Found"]}
-              currentValue={mEnterlobii2022Found}
-              setCurrentValue={setMEnterlobii2022Found}
-            />
             <div style={{ display: "grid", width: "fit-content" }}>
               <Gauge
                 min={0}
@@ -169,6 +115,7 @@ function App() {
                 radius={300}
                 title={`M. incognita per 500cc`}
                 currentValue={mIncognita2022}
+                reverseColorScheme
               />
               <Slider
                 min={0}
@@ -178,8 +125,73 @@ function App() {
                 setCurrentValue={setMIncognita2022}
               />
             </div>
+            <RadioButtonGroup
+              title="M. enterlobii found"
+              data={["Found", "Not Found"]}
+              currentValue={mEnterlobii2022Found}
+              setCurrentValue={setMEnterlobii2022Found}
+            />
           </fieldset>
-          <fieldset style={{ display: "flex" }}>
+
+          <div style={{ display: "flex" }}>
+            <fieldset style={{ width: "fit-content", height: "fit-content" }}>
+              <legend>Spring 2023</legend>
+              <RadioButtonGroup
+                title="Crop to plant (assumes the alternate crop in 2024)"
+                data={["Peanuts", "Sweetpotatoes"]}
+                currentValue={spring2023Crop}
+                setCurrentValue={setSpring2023Crop}
+              />
+              <RadioButtonGroup
+                title="Fumigant Nematicide 2023"
+                data={[
+                  "Apply fumigant nematicide",
+                  "Do not apply non-fumigant nematicide",
+                ]}
+                currentValue={spring2023FumigantNematicide}
+                setCurrentValue={setSpring2023FumigantNematicide}
+              />
+              <RadioButtonGroup
+                title="Non-Fumigant Nematicide 2023"
+                data={[
+                  "Apply fumigant nematicide",
+                  "Do not apply non-fumigant nematicide",
+                ]}
+                currentValue={spring2023NonFumigantNematicide}
+                setCurrentValue={setSpring2023NonFumigantNematicide}
+              />
+            </fieldset>
+
+            <fieldset
+              style={{
+                width: "fit-content",
+              }}
+            >
+              <legend>Spring 2024</legend>
+              <RadioButtonGroup
+                title="Fumigant Nematicide 2024"
+                data={[
+                  "Apply fumigant nematicide",
+                  "Do not apply non-fumigant nematicide",
+                ]}
+                currentValue={spring2024FumigantNematicide}
+                setCurrentValue={setSpring2024FumigantNematicide}
+              />
+              <RadioButtonGroup
+                title="Non-Fumigant Nematicide 2024"
+                data={[
+                  "Apply fumigant nematicide",
+                  "Do not apply non-fumigant nematicide",
+                ]}
+                currentValue={spring2024NonFumigantNematicide}
+                setCurrentValue={setSpring2024NonFumigantNematicide}
+              />
+            </fieldset>
+          </div>
+
+          <fieldset
+            style={{ display: "flex", justifyContent: "space-between" }}
+          >
             <legend>Fumigant</legend>
             <div style={{ display: "grid", height: "fit-content" }}>
               <Gauge
@@ -188,6 +200,7 @@ function App() {
                 radius={300}
                 title={`Avg Soil Temp (°F)`}
                 currentValue={soilTemp}
+                d3ColorScheme={d3.interpolateHslLong("deepskyblue", "red")}
               />
               <Slider
                 min={0}
@@ -197,6 +210,7 @@ function App() {
                 setCurrentValue={setSoilTemp}
               />
             </div>
+
             <div>
               {[
                 {
@@ -220,6 +234,9 @@ function App() {
             </div>
           </fieldset>
         </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
         <div style={{ display: "flex" }}>
           {[
             {
@@ -246,39 +263,42 @@ function App() {
                 radius={300}
                 title={`M. incognita per 500cc`}
                 currentValue={gauge.currentValue}
+                reverseColorScheme
               />
               <p>{`M. enterlobii ${
-                gauge.present ? "present" : "not present"
-              }`}</p>
+                (!gauge.present && "not") || ""
+              } present`}</p>
             </fieldset>
           ))}
-          <div>
-            <fieldset>
-              <legend>Profits from this field 2023 and 2024 ($/acre)</legend>
-              {[
-                { title: "2023 Profits", currentValue: profit2023 },
-                { title: "2024 Profits", currentValue: profit2024 },
-              ].map((gauge) => (
-                <Gauge
-                  min={0}
-                  max={3000}
-                  radius={300}
-                  title={gauge.title}
-                  currentValue={gauge.currentValue}
-                />
-              ))}
-            </fieldset>
-            <fieldset>
-              <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
+        </div>
+
+        <div style={{ display: "flex" }}>
+          <fieldset>
+            <legend>Profits from this field 2023 and 2024 ($/acre)</legend>
+            {[
+              { title: "2023 Profits", currentValue: profit2023 },
+              { title: "2024 Profits", currentValue: profit2024 },
+            ].map((gauge) => (
               <Gauge
                 min={0}
                 max={3000}
                 radius={300}
-                title={"Total Profit"}
-                currentValue={totalProfit}
+                title={gauge.title}
+                currentValue={gauge.currentValue}
               />
-            </fieldset>
-          </div>
+            ))}
+          </fieldset>
+
+          <fieldset>
+            <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
+            <Gauge
+              min={0}
+              max={3000}
+              radius={300}
+              title={"Total Profit"}
+              currentValue={totalProfit}
+            />
+          </fieldset>
         </div>
       </div>
     </div>
