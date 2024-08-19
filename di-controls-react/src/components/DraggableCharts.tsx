@@ -1,6 +1,13 @@
 import Color from "color";
 import * as d3 from "d3";
-import { RefObject, useMemo, useRef, useState } from "react";
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Slider } from "./BasicControls";
 
 interface d3Interpolate {
@@ -37,6 +44,18 @@ interface DraggableAreaChartProps {
   stroke?: string;
 }
 
+interface DraggableGaugeProps {
+  title: string;
+  radius?: number;
+  min: number;
+  max: number;
+  currentValue: number;
+  setCurrentValue: React.Dispatch<React.SetStateAction<number>>;
+  d3ColorScheme?: d3Interpolate;
+  reverseColorScheme?: boolean;
+  stroke?: string;
+}
+
 type Node = {
   name?: string;
   value?: number;
@@ -54,7 +73,7 @@ interface TreemapProps {
 
 /**
  *
- * @param {Object} data Array of objects of type {name, color?, value, set} where 'value' and 'set' are derived from useState()
+ * @param {{name: string, color: string, value: number, set: React.Dispatch<React.SetStateAction<number>>}} data Array of objects of type {name, color?, value, set} where 'value' and 'set' are derived from useState()
  * @param {number} [radius=500] OPTIONAL, radius in pixels of the piechart element, default 500
  * @param {boolean} [isDonut=false] OPTIONAL, whether or not the piechart is hollow, default false
  * @param {d3Interpolate} [d3ColorScheme=d3.interpolateSpectral] OPTIONAL, d3 interpolate function for easily generating color schemes, default d3.interpolateSpectral
@@ -108,9 +127,7 @@ function DraggablePieChart({
   //@ts-expect-error pie() accepts our data and molds further functions that use the data generated to the datatypes within data
   const arcs = pie(data);
 
-  // this useEffect() is here as we want to re-render our piechart whenever any of the variables that it builds itself from change
-  // these variables are contained in the dependency array at the bottom of the function
-  useMemo(() => {
+  const renderPieChart = useCallback(() => {
     // when the chart updates, we need to adjust other slices from the one that we affected, this is where we do that
     const delta = total - currentTotal; // get the difference between all the current values and what they should be
     const indexesToAdjust = onlyAdjustSubsequentSlices // get the indexes of the data array that we want to adjust
@@ -242,12 +259,11 @@ function DraggablePieChart({
     radius,
   ]);
 
-  // this useEffect() is for building our handles onto the main chart svg object
-  // we have it here as we want these to change only when superficial aspects such as colour, radius, etc. change and not when the data changes
-  // this is because the position of the handles is not updated from the DOM but rather from our interaction so they do not need to be recalculated
-  // like the rest of the chart does
-  // however, they do need to be recalculated if the colours change, the chart changes size, etc.
-  useMemo(() => {
+  // this usMemo() is here as we want to re-render our piechart whenever any of the variables that it builds itself from change
+  // these variables are contained in the dependency array at the bottom of the function
+  useMemo(() => renderPieChart(), [renderPieChart]);
+
+  const renderHandles = useCallback(() => {
     // add another svg component to our original graph using the graphRef
     const svg = d3
       .select(graphRef.current)
@@ -330,7 +346,14 @@ function DraggablePieChart({
         );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [color, radius, stroke]); // dependency array
+  }, [color, radius, stroke]);
+
+  // this useEffect() is for building our handles onto the main chart svg object
+  // we have it here as we want these to change only when superficial aspects such as colour, radius, etc. change and not when the data changes
+  // this is because the position of the handles is not updated from the DOM but rather from our interaction so they do not need to be recalculated
+  // like the rest of the chart does
+  // however, they do need to be recalculated if the colours change, the chart changes size, etc.
+  useMemo(() => renderHandles(), [renderHandles]); // dependency array
 
   return (
     <>
@@ -339,6 +362,17 @@ function DraggablePieChart({
   );
 }
 
+/**
+ *
+ * @param {{value: number, xValue: number, set: React.Dispatch<React.SetStateAction<number>>}}data  Array of objects of type {value, xValue, set} where value and set are stateful values
+ * @param {number} width OPTIONAL, width of the linechart component, default 500
+ * @param {number} height OPTIONAL, height of the line chart component, default 500
+ * @param {boolean} isAreaChart OPTIONAL, whether or not to color the area under the line, default false
+ * @param {string} color OPTIONAL, color of the line, default "#69b3a2"
+ * @param {string} areaColor OPTIONAL, color of the area under the line if isAreaChart=true, default "rgba(105, 179, 162, 0.3)"
+ * @param {string} textColor OPTIONAL, color of the text, default "rgba(105, 179, 162, 0.3)"
+ * @param {string} stroke OPTIONAL, color of the stroke around handles, default "white"
+ */
 function DraggableLineChart({
   data,
   width = 500,
@@ -456,6 +490,162 @@ function DraggableLineChart({
   return <svg width={width} height={height} ref={graphRef} />;
 }
 
+/**
+ *
+ * @param {number} currentValue stateful value with the number to represent in the gauge
+ * @param {React.Dispatch<React.SetStateAction<number>>} set setState function to update the currentValue
+ * @param {string} title text under the currentValue
+ * @param {number} min minimum number on the gauge
+ * @param {number} max maximum number on the gauge
+ * @param {number} radius OPTIONAL, radius of the gauge, default 500
+ * @param {string} d3ColorScheme OPTIONAL, d3.Interpolate function to generate a color scheme, default d3.interpolateHslLong("red", "limegreen")
+ * @param {boolean} reverseColorScheme OPTIONAL, whether or not to invert the direction the colorscheme flows in, default false
+ */
+function DraggableGauge({
+  currentValue,
+  setCurrentValue,
+  title,
+  min,
+  max,
+  radius = 500,
+  d3ColorScheme = d3.interpolateHslLong("red", "limegreen"),
+  reverseColorScheme = false,
+  stroke = "white",
+}: DraggableGaugeProps) {
+  const gaugeRef = useRef("graph");
+  const width = radius;
+  const height = radius / 2;
+  const innerRadius = Math.min(width, height) / 1.8;
+  const outerRadius = Math.min(width, height);
+  const startAngle = -Math.PI / 2;
+  const endAngle = Math.PI / 2;
+  const currentAngle =
+    Math.min((currentValue - min) / (max - min), max) * Math.PI;
+  const smallFont = `font: ${Math.max(radius / 30, 8)}px sans-serif;`;
+  const data = [...Array(max - min).keys()];
+  const color = d3
+    .scaleOrdinal()
+    .domain(data.map((d) => d.toString()))
+    .range(d3.quantize((t) => d3ColorScheme(t - 0.1), data.length));
+
+  useEffect(() => {
+    const svg = d3
+      .select(gaugeRef.current)
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [
+        -(width * 1.1) / 2,
+        -height - radius / 25,
+        width * 1.1,
+        height * 1.2,
+      ])
+      .attr(
+        "style",
+        `max-width: 100%; height: auto; font: ${Math.max(
+          radius / 15,
+          20
+        )}px sans-serif;`
+      );
+    svg.selectAll("g").remove();
+    const g = svg.append("g");
+    // .attr("transform", "translate(" + width / 2 + "," + height + ")");
+    const arc = d3
+      .arc()
+      .innerRadius(innerRadius)
+      .outerRadius(outerRadius)
+      .startAngle(startAngle)
+      .endAngle(endAngle);
+
+    const foregroundArc = d3
+      .arc()
+      .innerRadius(Math.min(width, height) / 1.8)
+      .outerRadius(Math.min(width, height))
+      .startAngle(startAngle)
+      .endAngle(startAngle + currentAngle);
+
+    g.append("path").style("fill", "#ddd").attr("d", arc);
+    g.append("path")
+      .style(
+        "fill",
+        color(
+          (reverseColorScheme
+            ? max - currentValue - 1
+            : currentValue - min - 1
+          ).toString()
+        ) as string
+      )
+      .attr("d", foregroundArc);
+
+    svg.selectAll("circle").remove();
+    svg
+      .append("circle")
+      .attr("cy", -outerRadius * Math.cos(startAngle + currentAngle))
+      .attr("cx", outerRadius * Math.sin(startAngle + currentAngle))
+      .attr("r", radius / 25)
+      .attr(
+        "fill",
+        color(
+          (reverseColorScheme
+            ? max - currentValue - 1
+            : currentValue - min - 1
+          ).toString()
+        ) as string
+      )
+      .attr("stroke", stroke)
+      .call((circle) =>
+        circle.call(
+          // @ts-expect-error jank typing built into d3
+          d3.drag().on("drag", (e) => {
+            // console.log(e.x);
+
+            setCurrentValue(
+              Math.min(
+                Math.max(
+                  min + Math.floor(((e.x + radius / 2) / radius) * (max - min)),
+                  min
+                ),
+                max
+              )
+            );
+            // test2(e.x);
+          })
+        )
+      );
+    // setCurrentValue(test.current);
+
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", -(radius / 25))
+      .text(currentValue);
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("style", smallFont)
+      .text(title);
+
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("x", -(outerRadius + innerRadius) / 2)
+      .attr("style", smallFont)
+      .attr("y", Math.max(radius / 30, 8))
+      .text(min);
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("x", (outerRadius + innerRadius) / 2)
+      .attr("y", Math.max(radius / 30, 8))
+      .attr("style", smallFont)
+      .text(max);
+  });
+
+  return <svg ref={gaugeRef} />;
+}
+
+/**
+ *
+ * @param {Node} data Object with the data to represent, formatted as {children: {name: string, children: {name: string, value: number, set: function}[]}[]}, can go as many layers deep as needed
+ * @param {number} width OPTIONAL, the width of the treemap component, default 500
+ * @param {number} height OPTIONAL, the height of the treemap component, default 500
+ * @param {d3Interpolate} d3ColorScheme OPTIONAL, the d3Interpolate function to use for the treemap's colorscheme, default d3.interpolateSpectral
+ */
 function DraggableTreeMap({
   width = 500,
   height = 500,
@@ -571,4 +761,9 @@ function DraggableTreeMap({
   );
 }
 
-export { DraggablePieChart, DraggableLineChart, DraggableTreeMap };
+export {
+  DraggablePieChart,
+  DraggableLineChart,
+  DraggableGauge,
+  DraggableTreeMap,
+};

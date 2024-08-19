@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 interface d3Interpolate {
   (t: number): string;
@@ -15,6 +15,43 @@ interface GaugeProps {
   reverseColorScheme?: boolean;
 }
 
+interface DraggableAreaChartProps {
+  data: Array<{
+    xValue?: number;
+    title?: string;
+    value: number;
+  }>;
+  yAxisTitle?: string;
+  width?: number;
+  height?: number;
+  stepHeight?: number;
+  isAreaChart?: boolean;
+  color?: string;
+  areaColor?: string;
+  textColor?: string;
+  stroke?: string;
+}
+
+interface ComponentGaugeProps {
+  total: { title: string; value: number; color?: string };
+  components: { title: string; value: number; color?: string }[];
+  title: string;
+  width?: number;
+  height?: number;
+  max: number;
+  d3ColorScheme?: d3Interpolate;
+}
+
+/**
+ *
+ * @param {number} currentValue stateful value with the number to represent in the gauge
+ * @param {string} title text under the currentValue
+ * @param {number} min minimum number on the gauge
+ * @param {number} max maximum number on the gauge
+ * @param {number} radius OPTIONAL, radius of the gauge, default 500
+ * @param {string} d3ColorScheme OPTIONAL, d3.Interpolate function to generate a color scheme, default d3.interpolateHslLong("red", "limegreen")
+ * @param {boolean} reverseColorScheme OPTIONAL, whether or not to invert the direction the colorscheme flows in, default false
+ */
 function Gauge({
   currentValue,
   title,
@@ -109,4 +146,253 @@ function Gauge({
   return <svg ref={gaugeRef} />;
 }
 
-export { Gauge };
+/**
+ *
+ * @param {{value: number, xValue: number, set: React.Dispatch<React.SetStateAction<number>>}}data  Array of objects of type {value, xValue, name} where value and set are stateful values
+ * @param {number} width OPTIONAL, width of the linechart component, default 500
+ * @param {number} height OPTIONAL, height of the line chart component, default 500
+ * @param {boolean} isAreaChart OPTIONAL, whether or not to color the area under the line, default false
+ * @param {string} color OPTIONAL, color of the line, default "#69b3a2"
+ * @param {string} areaColor OPTIONAL, color of the area under the line if isAreaChart=true, default "rgba(105, 179, 162, 0.3)"
+ * @param {string} textColor OPTIONAL, color of the text, default "rgba(105, 179, 162, 0.3)"
+ * @param {string} stroke OPTIONAL, color of the stroke around handles, default "white"
+ * @param {string} yAxisTitle OPTIONAL, text to label the y axis. default ""
+ * @param {number} stepHeight OPTIONAL, readjusts the scale each time a point goes above or below a multiple of this number
+ */
+function LineChart({
+  data,
+  yAxisTitle = "",
+  width = 500,
+  height = 500,
+  stepHeight = 1,
+  isAreaChart = false,
+  color = "#69b3a2",
+  areaColor = "rgba(105, 179, 162, 0.3)",
+  textColor = "black",
+  stroke = "white",
+}: DraggableAreaChartProps) {
+  const graphRef = useRef(null);
+  const graphValues = data.map((point, index) => ({
+    x: point.xValue || index,
+    title: point.title || "",
+    y: point.value,
+  }));
+
+  const [, yMax] = d3.extent(data, (d) => d.value);
+  const yScale = useMemo(() => {
+    return d3
+      .scaleLinear()
+      .domain([
+        0,
+        (yMax || 1) > stepHeight
+          ? stepHeight * Math.ceil((yMax || 1) / stepHeight)
+          : stepHeight,
+      ])
+      .range([height - 20, 10]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, height]);
+
+  const xScale = useMemo(() => {
+    return d3
+      .scalePoint()
+      .domain(data.map((point) => point.title || ""))
+      .range([40, width - 40]);
+  }, [data, width]);
+
+  useEffect(() => {
+    const svg = d3.select(graphRef.current);
+    svg.selectAll("*").remove();
+    const xAxisGenerator = d3.axisBottom(xScale);
+    svg
+      .append("g")
+      .call(xAxisGenerator)
+      .attr("transform", "translate(0," + (height - 20) + ")")
+      .attr("color", textColor);
+
+    const yAxisGenerator = d3.axisLeft(yScale);
+    svg
+      .append("g")
+      .call(yAxisGenerator)
+      .attr("transform", "translate(" + 40 + ",0)")
+      .attr("color", textColor);
+
+    // Add the area
+    if (isAreaChart) {
+      svg
+        .append("path")
+        .datum(graphValues)
+        .attr("fill", areaColor)
+        .attr("stroke", "none")
+        .attr(
+          "d",
+          //@ts-expect-error jank typing built into d3
+          d3
+            .area()
+            //@ts-expect-error jank typing built into d3
+            .x((d) => xScale(d.x))
+            .y0(height - 20)
+            //@ts-expect-error jank typing built into d3
+            .y1((d) => yScale(d.y))
+        );
+    }
+
+    // Add the line
+    svg
+      .append("path")
+      .datum(graphValues)
+      .attr("fill", "none")
+      .attr("stroke", color)
+      .attr("stroke-width", 4)
+      .attr(
+        "d",
+        //@ts-expect-error jank typing built into d3
+        d3
+          .line()
+          //@ts-expect-error jank typing built into d3
+          .x((d) => xScale(d.title))
+          //@ts-expect-error jank typing built into d3
+          .y((d) => yScale(d.y))
+      );
+
+    graphValues.forEach((point) => {
+      svg
+        .append("circle")
+        .attr("fill", color)
+        .attr("stroke", stroke)
+        .attr("cx", () => xScale(point.title) || 0)
+        .attr("cy", () => yScale(point.y))
+        .attr("r", 6);
+    });
+
+    svg
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0)
+      .attr("x", 0 - height / 2)
+      .attr("dy", ".8em")
+      .attr("style", "font: 10px sans-serif")
+      .style("text-anchor", "middle")
+      .text(yAxisTitle);
+  });
+
+  return <svg width={width} height={height} ref={graphRef} />;
+}
+
+/**
+ *
+ * @param {{title: string, value: number, color: string}} total an object of type {title: string, value: number, color?: string} that represents the sum of all components
+ * @param {number} components an array of objects with the same type as total that represent each component for the gauge
+ * @param {number} max the maximum value that the total represents a fraction of
+ * @param {number} width OPTIONAL, the width of the component gauge, default 300
+ * @param {number} height OPTIONAL, the height of the component gauge, default 500
+ * @param {d3Interpolate} d3ColorScheme OPTIONAL, the colorscheme for the component gauge to use, default d3.interpolateCool
+ * @returns
+ */
+function ComponentGauge({
+  total,
+  components,
+  title,
+  max,
+  width = 300,
+  height = 500,
+  d3ColorScheme = d3.interpolateCool,
+}: ComponentGaugeProps) {
+  const gaugeRef = useRef(null);
+  const smallFont = `font: ${Math.max(
+    Math.min(width, height) / 30,
+    8
+  )}px sans-serif;`;
+
+  const sum = components.reduce((sum, a) => sum + a.value, 0);
+  components.push(total);
+  components.reverse();
+
+  const color = d3
+    .scaleOrdinal()
+    .domain(components.map((d) => d.title))
+    .range(d3.quantize((t) => d3ColorScheme(t * 0.8 + 0.1), components.length));
+  components.reverse().pop();
+
+  useEffect(() => {
+    const svg = d3
+      .select(gaugeRef.current)
+      .attr("width", width)
+      .attr("height", height)
+      .attr(
+        "style",
+        `max-width: 100%; height: auto; font: ${Math.max(
+          Math.min(width, height) / 15,
+          20
+        )}px sans-serif;`
+      );
+    svg.selectAll("g").remove();
+
+    const totalSVG = svg.append("g");
+    totalSVG
+      .append("rect")
+      .attr("width", width / 2 - 6)
+      .attr("height", height * (total.value / max))
+      .attr("y", height - height * (total.value / max))
+      .attr("fill", total.color || (color(total.title) as string))
+      .attr("rx", 4)
+      .attr("ry", 4);
+    totalSVG
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", height - (height * (total.value / max)) / 2)
+      .attr("x", width / 4)
+      .attr("style", smallFont)
+      .text(`${total.title}:`);
+    totalSVG
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr(
+        "y",
+        height -
+          (height * (total.value / max)) / 2 +
+          Math.max(Math.min(width, height) / 20 + 4, 12)
+      )
+      .attr("x", width / 4)
+      .text(`${total.value}`);
+
+    const componentsSVG = svg.append("g");
+    let currentY = 0;
+    components.forEach((element) => {
+      const componentHeight = (element.value / sum) * height;
+
+      componentsSVG
+        .append("rect")
+        .attr("x", width / 2)
+        .attr("y", currentY)
+        .attr("width", width / 2 - 6)
+        .attr("height", currentY ? componentHeight : componentHeight - 6)
+        .attr("rx", 4)
+        .attr("ry", 4)
+        .attr("fill", element.color || (color(element.title) as string));
+      componentsSVG
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("y", currentY + componentHeight / 2)
+        .attr("x", width / 4 + width / 2)
+        .attr("style", smallFont)
+        .text(`${element.title}:`);
+      componentsSVG
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr(
+          "y",
+          currentY +
+            componentHeight / 2 +
+            Math.max(Math.min(width, height) / 20 + 4, 12)
+        )
+        .attr("x", width / 4 + width / 2)
+        .text(`${element.value}`);
+
+      currentY += componentHeight;
+    });
+  });
+
+  return <svg ref={gaugeRef} />;
+}
+
+export { Gauge, LineChart, ComponentGauge };

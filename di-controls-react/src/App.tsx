@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { Gauge } from "./components/DataVisualizations";
-import { RadioButtonGroup, Slider } from "./components/BasicControls";
+import {
+  ComponentGauge,
+  Gauge,
+  LineChart,
+} from "./components/DataVisualizations";
+import { RadioButtonGroup } from "./components/BasicControls";
 import * as d3 from "d3";
+import { DraggableGauge } from "./components/DraggableCharts";
 
 function App() {
   const applyFumigantNematicideOptions = [
@@ -292,20 +297,15 @@ function App() {
             },
           ].map((gauge) => (
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <Gauge
+              <DraggableGauge
                 min={gauge.min || 0}
                 max={gauge.max}
                 radius={300}
                 title={gauge.title}
                 currentValue={gauge.currentValue}
-                reverseColorScheme
-              />
-              <Slider
-                min={gauge.min || 0}
-                max={gauge.max}
-                step={1}
-                currentValue={gauge.currentValue}
                 setCurrentValue={gauge.set}
+                reverseColorScheme
+                stroke="black"
               />
             </div>
           ))}
@@ -321,20 +321,15 @@ function App() {
           >
             <legend>Root knot nematodes in field fall 2022</legend>
             <div style={{ display: "grid", width: "fit-content" }}>
-              <Gauge
+              <DraggableGauge
                 min={0}
                 max={150}
                 radius={300}
                 title={`M. incognita per 500cc`}
                 currentValue={mIncognita2022}
-                reverseColorScheme
-              />
-              <Slider
-                min={0}
-                max={150}
-                step={1}
-                currentValue={mIncognita2022}
                 setCurrentValue={setMIncognita2022}
+                reverseColorScheme
+                stroke="black"
               />
             </div>
             <RadioButtonGroup
@@ -394,20 +389,15 @@ function App() {
           >
             <legend>Fumigant</legend>
             <div style={{ display: "grid", height: "fit-content" }}>
-              <Gauge
+              <DraggableGauge
                 min={0}
                 max={102}
                 radius={300}
                 title={`Avg Soil Temp (°F)`}
                 currentValue={soilTemp}
-                d3ColorScheme={d3.interpolateHslLong("deepskyblue", "red")}
-              />
-              <Slider
-                min={0}
-                max={102}
-                step={1}
-                currentValue={soilTemp}
                 setCurrentValue={setSoilTemp}
+                d3ColorScheme={d3.interpolateHslLong("deepskyblue", "red")}
+                stroke="black"
               />
             </div>
 
@@ -441,49 +431,33 @@ function App() {
           display: "flex",
           flexDirection: "column",
           gap: 32,
-          width: 1000,
+          width: 800,
         }}
       >
         <div style={{ display: "flex" }}>
-          {[
-            {
-              title: "Spring 2023",
-              max: 150,
-              currentValue: mIncognitaSpring2023,
-              present: mEnterlobiiSpring2023Present,
-            },
-            {
-              title: "Fall 2023",
-              max: 1050,
-              currentValue: mIncognitaFall2023,
-              present: mEnterlobiiFall2023Present,
-            },
-            {
-              title: "Spring 2024",
-              max: 1050,
-              currentValue: mIncognitaSpring2024,
-              present: mEnterlobiiSpring2024Present,
-            },
-          ].map((gauge) => (
-            <fieldset style={{ height: "fit-content" }}>
-              <legend>{gauge.title}</legend>
-              <Gauge
-                min={0}
-                max={gauge.max}
-                radius={300}
-                title={`M. incognita per 500cc`}
-                currentValue={gauge.currentValue}
-                reverseColorScheme
-              />
-              <p>{`M. enterlobii ${
-                (!gauge.present && "not") || ""
-              } present`}</p>
-            </fieldset>
-          ))}
+          <LineChart
+            data={[
+              {
+                title: "Spring 2023",
+                value: mIncognitaSpring2023,
+              },
+              {
+                title: "Fall 2023",
+                value: mIncognitaFall2023,
+              },
+              {
+                title: "Spring 2024",
+                value: mIncognitaSpring2024,
+              },
+            ]}
+            height={200}
+            stepHeight={50}
+            yAxisTitle="M. incognita per 500cc"
+          />
         </div>
 
         <div style={{ display: "flex" }}>
-          <fieldset>
+          <fieldset style={{ display: "grid" }}>
             <legend>Profits from this field 2023 and 2024 ($/acre)</legend>
             {[
               { title: "2023 Profits", currentValue: profit2023 },
@@ -502,25 +476,29 @@ function App() {
           <fieldset>
             <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
             <Gauge
+              title="Total Revenue"
               min={0}
               max={8000}
-              radius={300}
-              title={"Total Profit"}
-              currentValue={totalProfit}
-            />
-            <Gauge
-              min={0}
-              max={8000}
-              radius={300}
-              title={"Total Cost"}
-              currentValue={totalCost}
-            />
-            <Gauge
-              min={0}
-              max={8000}
-              radius={300}
-              title={"Total Revenue"}
               currentValue={totalValue}
+              radius={300}
+            />
+            <ComponentGauge
+              title="Revenue Cost Split"
+              total={{
+                title: "Total Revenue",
+                value: totalValue,
+                color: "mediumturquoise",
+              }}
+              components={[
+                {
+                  title: "Total Profit",
+                  value: totalProfit,
+                  color: "green",
+                },
+                { title: "Total Cost", value: totalCost, color: "crimson" },
+              ]}
+              max={8000}
+              height={300}
             />
           </fieldset>
         </div>
