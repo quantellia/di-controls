@@ -483,15 +483,19 @@ function App() {
               radius={300}
             />
             <ComponentGauge
-              title="Revenue"
-              total={totalValue}
+              title="Revenue Cost Split"
+              total={{
+                title: "Total Revenue",
+                value: totalValue,
+                color: "mediumturquoise",
+              }}
               components={[
                 {
-                  title: "Profit",
+                  title: "Total Profit",
                   value: totalProfit,
                   color: "green",
                 },
-                { title: "Cost", value: totalCost, color: "crimson" },
+                { title: "Total Cost", value: totalCost, color: "crimson" },
               ]}
               min={0}
               max={8000}
