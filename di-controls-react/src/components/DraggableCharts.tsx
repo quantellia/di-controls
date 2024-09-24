@@ -9,6 +9,8 @@ import {
   useState,
 } from "react";
 import { Slider } from "./BasicControls";
+import Draggable from "react-draggable";
+import { ArcherElement } from "react-archer";
 
 interface d3Interpolate {
   (t: number): string;
@@ -636,7 +638,22 @@ function DraggableGauge({
       .text(max);
   });
 
-  return <svg ref={gaugeRef} />;
+  return (<>
+  
+    <ArcherElement id={title} relations={[
+      {
+        targetId: 'profit',
+        targetAnchor:'left',
+        sourceAnchor: "right",
+      }
+    ]}><div>
+      <Draggable nodeRef={gaugeRef as RefObject<HTMLElement>}>
+        <svg ref={gaugeRef} />
+        </Draggable>
+      </div>
+    </ArcherElement>
+    </>)
+  
 }
 
 /**
