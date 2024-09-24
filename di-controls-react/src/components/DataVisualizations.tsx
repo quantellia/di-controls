@@ -33,11 +33,11 @@ interface DraggableAreaChartProps {
 }
 
 interface ComponentGaugeProps {
-  total: { title: string; value: number; color?: string };
+  total: number;
   components: { title: string; value: number; color?: string }[];
   title: string;
-  width?: number;
-  height?: number;
+  radius?: number;
+  min: number;
   max: number;
   d3ColorScheme?: d3Interpolate;
 }
@@ -280,8 +280,8 @@ function LineChart({
 
 /**
  *
- * @param {{title: string, value: number, color: string}} total an object of type {title: string, value: number, color?: string} that represents the sum of all components
- * @param {number} components an array of objects with the same type as total that represent each component for the gauge
+ * @param {number} total the total value of all components
+ * @param {{title: string, value: number, color: string}[]} components an array of objects of type {title: string, value: number, color?: string} that represent each component for the gauge
  * @param {number} max the maximum value that the total represents a fraction of
  * @param {number} width OPTIONAL, the width of the component gauge, default 300
  * @param {number} height OPTIONAL, the height of the component gauge, default 500
@@ -292,104 +292,139 @@ function ComponentGauge({
   total,
   components,
   title,
+  min,
   max,
-  width = 300,
-  height = 500,
-  d3ColorScheme = d3.interpolateCool,
+  radius = 300,
+  d3ColorScheme = d3.interpolateHslLong("red", "limegreen"),
 }: ComponentGaugeProps) {
   const gaugeRef = useRef(null);
-  const smallFont = `font: ${Math.max(
-    Math.min(width, height) / 30,
-    8
-  )}px sans-serif;`;
-
-  const sum = components.reduce((sum, a) => sum + a.value, 0);
-  components.push(total);
-  components.reverse();
-
+  const width = radius;
+  const height = radius / 2;
+  const innerRadius = Math.min(width, height) / 1.8;
+  const outerRadius = Math.min(width, height);
+  const startAngle = -Math.PI / 2;
+  const endAngle = Math.PI / 2;
+  const smallFont = `font: ${Math.max(radius / 30, 8)}px sans-serif;`;
   const color = d3
     .scaleOrdinal()
     .domain(components.map((d) => d.title))
-    .range(d3.quantize((t) => d3ColorScheme(t * 0.8 + 0.1), components.length));
-  components.reverse().pop();
+    .range(d3.quantize((t) => d3ColorScheme(t), components.length));
 
   useEffect(() => {
     const svg = d3
       .select(gaugeRef.current)
       .attr("width", width)
       .attr("height", height)
+      .attr("viewBox", [-(width * 1.1) / 2, -height, width * 1.1, height * 1.1])
       .attr(
         "style",
         `max-width: 100%; height: auto; font: ${Math.max(
-          Math.min(width, height) / 15,
+          radius / 15,
           20
         )}px sans-serif;`
       );
     svg.selectAll("g").remove();
+    const g = svg.append("g");
+    // .attr("transform", "translate(" + width / 2 + "," + height + ")");
+    const arc = d3
+      .arc()
+      .innerRadius(innerRadius)
+      .outerRadius(outerRadius)
+      .startAngle(startAngle)
+      .endAngle(endAngle);
 
-    const totalSVG = svg.append("g");
-    totalSVG
-      .append("rect")
-      .attr("width", width / 2 - 6)
-      .attr("height", height * (total.value / max))
-      .attr("y", height - height * (total.value / max))
-      .attr("fill", total.color || (color(total.title) as string))
-      .attr("rx", 4)
-      .attr("ry", 4);
-    totalSVG
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("y", height - (height * (total.value / max)) / 2)
-      .attr("x", width / 4)
-      .attr("style", smallFont)
-      .text(`${total.title}:`);
-    totalSVG
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr(
-        "y",
-        height -
-          (height * (total.value / max)) / 2 +
-          Math.max(Math.min(width, height) / 20 + 4, 12)
-      )
-      .attr("x", width / 4)
-      .text(`${total.value}`);
+    g.append("path").style("fill", "#ddd").attr("d", arc);
 
-    const componentsSVG = svg.append("g");
-    let currentY = 0;
-    components.forEach((element) => {
-      const componentHeight = (element.value / sum) * height;
-
-      componentsSVG
-        .append("rect")
-        .attr("x", width / 2)
-        .attr("y", currentY)
-        .attr("width", width / 2 - 6)
-        .attr("height", currentY ? componentHeight : componentHeight - 6)
-        .attr("rx", 4)
-        .attr("ry", 4)
-        .attr("fill", element.color || (color(element.title) as string));
-      componentsSVG
-        .append("text")
-        .attr("text-anchor", "middle")
-        .attr("y", currentY + componentHeight / 2)
-        .attr("x", width / 4 + width / 2)
-        .attr("style", smallFont)
-        .text(`${element.title}:`);
-      componentsSVG
-        .append("text")
-        .attr("text-anchor", "middle")
-        .attr(
-          "y",
-          currentY +
-            componentHeight / 2 +
-            Math.max(Math.min(width, height) / 20 + 4, 12)
+    let componentStartAngle = startAngle;
+    components.forEach((component) => {
+      const currentAngle =
+        Math.min((component.value - min) / (max - min), max) * Math.PI;
+      const foregroundArc = d3
+        .arc()
+        .innerRadius(Math.min(width, height) / 1.8)
+        .outerRadius(Math.min(width, height))
+        .startAngle(componentStartAngle)
+        .endAngle(componentStartAngle + currentAngle);
+      const innerArc = d3
+        .arc()
+        .innerRadius(
+          Math.min(width, height) / 1.8 -
+            Math.max(
+              (3 * component.title.length * Math.max(radius / 30, 8)) / 10
+            )
         )
-        .attr("x", width / 4 + width / 2)
-        .text(`${element.value}`);
+        .outerRadius(Math.min(width, height) / 1.8 - 18)
+        .startAngle(componentStartAngle)
+        .endAngle(componentStartAngle + currentAngle);
 
-      currentY += componentHeight;
+      g.append("path")
+        .style(
+          "fill",
+          component.color ? component.color : (color(component.title) as string)
+        )
+        .attr("d", foregroundArc);
+      g.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", (d) => `translate(${foregroundArc.centroid(d)})`)
+        .call(
+          (text) =>
+            text
+              .append("tspan")
+              .attr("y", "+0.4em")
+              .attr("font-weight", "bold")
+              .attr("style", smallFont)
+              .text(component.value) // set the actual text to the name in the data from our data object
+        );
+      if (currentAngle > 0.369)
+        g.append("text")
+          .attr("text-anchor", "middle")
+          .attr("transform", (d) => `translate(${foregroundArc.centroid(d)})`)
+          .call(
+            (text) =>
+              text
+                .append("tspan")
+                .attr("y", "-0.6em")
+                .attr("font-weight", "bold")
+                .attr("style", smallFont)
+                .text(component.title) // set the actual text to the name in the data from our data object
+          );
+      else
+        g.append("text")
+          .attr("text-anchor", "middle")
+          .attr("transform", (d) => `translate(${innerArc.centroid(d)})`)
+          .call(
+            (text) =>
+              text
+                .append("tspan")
+                .attr("y", "+0.4em")
+                .attr("font-weight", "bold")
+                .attr("style", smallFont)
+                .text(component.title) // set the actual text to the name in the data from our data object
+          );
+      componentStartAngle += currentAngle;
     });
+
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", -(radius / 25))
+      .text(total);
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("style", smallFont)
+      .text(title);
+
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("x", -(outerRadius + innerRadius) / 2)
+      .attr("style", smallFont)
+      .attr("y", Math.max(radius / 30, 8))
+      .text(min);
+    g.append("text")
+      .attr("text-anchor", "middle")
+      .attr("x", (outerRadius + innerRadius) / 2)
+      .attr("y", Math.max(radius / 30, 8))
+      .attr("style", smallFont)
+      .text(max);
   });
 
   return <svg ref={gaugeRef} />;

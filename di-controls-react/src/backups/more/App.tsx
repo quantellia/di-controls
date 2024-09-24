@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   ComponentGauge,
   Gauge,
@@ -7,7 +7,6 @@ import {
 import { RadioButtonGroup } from "./components/BasicControls";
 import * as d3 from "d3";
 import { DraggableGauge } from "./components/DraggableCharts";
-import { ArcherContainer, ArcherElement } from "react-archer";
 
 function App() {
   const applyFumigantNematicideOptions = [
@@ -271,7 +270,6 @@ function App() {
   `;
 
   return (
-    <ArcherContainer strokeColor="black">
     <div style={{ display: "flex", gap: 32, font: "14px sans-serif" }}>
       <div style={{ display: "flex" }}>
         <fieldset style={{ display: "grid", alignItems: "center" }}>
@@ -475,7 +473,6 @@ function App() {
             ))}
           </fieldset>
 
-          <ArcherElement id="profit">
           <fieldset>
             <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
             <Gauge
@@ -486,28 +483,29 @@ function App() {
               radius={300}
             />
             <ComponentGauge
-              title="Revenue"
-              total={totalValue}
+              title="Revenue Cost Split"
+              total={{
+                title: "Total Revenue",
+                value: totalValue,
+                color: "mediumturquoise",
+              }}
               components={[
                 {
-                  title: "Profit",
+                  title: "Total Profit",
                   value: totalProfit,
                   color: "green",
                 },
-                { title: "Cost", value: totalCost, color: "crimson" },
+                { title: "Total Cost", value: totalCost, color: "crimson" },
               ]}
               min={0}
               max={8000}
               radius={300}
             />
           </fieldset>
-          </ArcherElement>
         </div>
         <div>{explanation}</div>
       </div>
-      
     </div>
-    </ArcherContainer>
   );
 }
 

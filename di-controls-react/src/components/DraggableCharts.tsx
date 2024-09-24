@@ -263,7 +263,7 @@ function DraggablePieChart({
 
   // this usMemo() is here as we want to re-render our piechart whenever any of the variables that it builds itself from change
   // these variables are contained in the dependency array at the bottom of the function
-  useMemo(() => renderPieChart(), [renderPieChart]);
+  useEffect(() => renderPieChart());
 
   const renderHandles = useCallback(() => {
     // add another svg component to our original graph using the graphRef
@@ -355,7 +355,7 @@ function DraggablePieChart({
   // this is because the position of the handles is not updated from the DOM but rather from our interaction so they do not need to be recalculated
   // like the rest of the chart does
   // however, they do need to be recalculated if the colours change, the chart changes size, etc.
-  useMemo(() => renderHandles(), [renderHandles]); // dependency array
+  useEffect(() => renderHandles()); // dependency array
 
   return (
     <>
@@ -385,20 +385,23 @@ function DraggableLineChart({
   textColor = "black",
   stroke = "white",
 }: DraggableAreaChartProps) {
-  const graphRef = useRef(null);
+  const graphRef = useRef(null); // creates the persistent ref object used to store the svg for the graph
   const graphValues = data.map((point, index) => ({
+    // maps the data array into an array that we can use better in the actual chart
     x: point.xValue || index,
     y: point.value,
     set: point.set,
   }));
   const maxXValue = Math.max(
+    // gets the highest xValue from the data array
     ...data
       .filter((point) => point.xValue !== undefined)
       .map((point) => point.xValue || 0)
   );
 
-  const [, yMax] = d3.extent(data, (d) => d.value);
+  const [, yMax] = d3.extent(data, (d) => d.value); // gets the highest y value from the data array
   const yScale = useMemo(() => {
+    // creates a d3 linear scale for use in constructing the graph, the scale itself maps our values to pixel height
     return d3
       .scaleLinear()
       .domain([0, yMax || 0])
@@ -407,22 +410,26 @@ function DraggableLineChart({
   }, [data, height]);
 
   const xScale = useMemo(() => {
+    // creates a d3 linear scale for use in construction the graph, similar to the yScale
     return d3
       .scaleLinear()
       .domain([0, Math.max(maxXValue, data.length)])
       .range([30, width - 10]);
   }, [data.length, maxXValue, width]);
 
-  useMemo(() => {
-    const svg = d3.select(graphRef.current);
-    svg.selectAll("*").remove();
-    const xAxisGenerator = d3.axisBottom(xScale);
+  useEffect(() => {
+    const svg = d3.select(graphRef.current); // create an SVG on the persistent ref object
+    svg.selectAll("*").remove(); // remove everything for re-rendering when anything changes
+    const xAxisGenerator = d3.axisBottom(xScale); // creates the xAxis of the chart
+
+    // add the xAxis to the chart
     svg
       .append("g")
       .call(xAxisGenerator)
       .attr("transform", "translate(0," + (height - 20) + ")")
       .attr("color", textColor);
 
+    // add they yAxis to the chart
     const yAxisGenerator = d3.axisLeft(yScale);
     svg
       .append("g")
@@ -430,7 +437,7 @@ function DraggableLineChart({
       .attr("transform", "translate(" + 30 + ",0)")
       .attr("color", textColor);
 
-    // Add the area
+    // Add the area under the graph
     if (isAreaChart) {
       svg
         .append("path")
@@ -468,6 +475,7 @@ function DraggableLineChart({
           .y((d) => yScale(d.y))
       );
 
+    // create the handles for each point on the graph for use later
     graphValues.forEach((point) => {
       svg
         .append("circle")
@@ -476,19 +484,23 @@ function DraggableLineChart({
         .attr("cx", () => xScale(point.x))
         .attr("cy", () => yScale(point.y))
         .attr("r", 6)
-        .call((circle) =>
-          circle.call(
-            // @ts-expect-error jank typing built into d3
-            d3.drag().on("drag", (e) => {
-              const newY = e.y < height - 20 ? e.y : height - 20;
-              point.set(yScale.invert(newY));
-            })
-          )
+        .call(
+          (
+            circle // onDrag function
+          ) =>
+            circle.call(
+              // @ts-expect-error jank typing built into d3
+              d3.drag().on("drag", (e) => {
+                const newY = e.y < height - 20 ? e.y : height - 20;
+                point.set(yScale.invert(newY));
+              })
+            )
         );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [xScale, yScale, height, data, isAreaChart]);
+  });
 
+  // return the SVG with the given dimensions
   return <svg width={width} height={height} ref={graphRef} />;
 }
 
@@ -514,15 +526,23 @@ function DraggableGauge({
   reverseColorScheme = false,
   stroke = "white",
 }: DraggableGaugeProps) {
-  const gaugeRef = useRef("graph");
+  const gaugeRef = useRef("graph"); // create the persistent ref object to store the SVG in
+
+  // dimensional values
   const width = radius;
   const height = radius / 2;
   const innerRadius = Math.min(width, height) / 1.8;
   const outerRadius = Math.min(width, height);
+
+  // start and end angles for the whole gauge
   const startAngle = -Math.PI / 2;
   const endAngle = Math.PI / 2;
+
+  // current angle as a measure of progress between start and end angles
   const currentAngle =
     Math.min((currentValue - min) / (max - min), max) * Math.PI;
+
+  // misc other variables
   const smallFont = `font: ${Math.max(radius / 30, 8)}px sans-serif;`;
   const data = [...Array(max - min).keys()];
   const color = d3
@@ -531,6 +551,7 @@ function DraggableGauge({
     .range(d3.quantize((t) => d3ColorScheme(t - 0.1), data.length));
 
   useEffect(() => {
+    // create the svg with the necessary dimensions and styling
     const svg = d3
       .select(gaugeRef.current)
       .attr("width", width)
@@ -541,6 +562,7 @@ function DraggableGauge({
         width * 1.1,
         height * 1.2,
       ])
+      // text styling for fonts
       .attr(
         "style",
         `max-width: 100%; height: auto; font: ${Math.max(
@@ -550,7 +572,8 @@ function DraggableGauge({
       );
     svg.selectAll("g").remove();
     const g = svg.append("g");
-    // .attr("transform", "translate(" + width / 2 + "," + height + ")");
+
+    // background grey arc
     const arc = d3
       .arc()
       .innerRadius(innerRadius)
@@ -558,6 +581,7 @@ function DraggableGauge({
       .startAngle(startAngle)
       .endAngle(endAngle);
 
+    // foregroundArc is the arc in the foreground, i.e. the arc that shows gauge value
     const foregroundArc = d3
       .arc()
       .innerRadius(Math.min(width, height) / 1.8)
@@ -565,12 +589,15 @@ function DraggableGauge({
       .startAngle(startAngle)
       .endAngle(startAngle + currentAngle);
 
-    g.append("path").style("fill", "#ddd").attr("d", arc);
+    // these populate the svg with the arcs that we generated
+    g.append("path").style("fill", "#ddd").attr("d", arc); // background arc filled grey
+
+    // foreground arc
     g.append("path")
       .style(
         "fill",
         color(
-          (reverseColorScheme
+          (reverseColorScheme // use defined colour schemes
             ? max - currentValue - 1
             : currentValue - min - 1
           ).toString()
@@ -578,7 +605,10 @@ function DraggableGauge({
       )
       .attr("d", foregroundArc);
 
+    // delete any previously rendered handles
     svg.selectAll("circle").remove();
+
+    // render the current handle
     svg
       .append("circle")
       .attr("cy", -outerRadius * Math.cos(startAngle + currentAngle))
@@ -594,26 +624,27 @@ function DraggableGauge({
         ) as string
       )
       .attr("stroke", stroke)
-      .call((circle) =>
-        circle.call(
-          // @ts-expect-error jank typing built into d3
-          d3.drag().on("drag", (e) => {
-            // console.log(e.x);
-
-            setCurrentValue(
-              Math.min(
-                Math.max(
-                  min + Math.floor(((e.x + radius / 2) / radius) * (max - min)),
-                  min
-                ),
-                max
-              )
-            );
-            // test2(e.x);
-          })
-        )
+      .call(
+        (
+          circle // onDrag function
+        ) =>
+          circle.call(
+            // @ts-expect-error jank typing built into d3
+            d3.drag().on("drag", (e) => {
+              setCurrentValue(
+                // clamp the currentValue between the min and max
+                Math.min(
+                  Math.max(
+                    min +
+                      Math.floor(((e.x + radius / 2) / radius) * (max - min)), // calculate the currentValue
+                    min
+                  ),
+                  max
+                )
+              );
+            })
+          )
       );
-    // setCurrentValue(test.current);
 
     g.append("text")
       .attr("text-anchor", "middle")
@@ -710,7 +741,7 @@ function DraggableTreeMap({
     .attr("height", height)
     .attr("style", `max-width: 100%; height: auto; font: 12px sans-serif;`);
 
-  useMemo(() => {
+  useEffect(() => {
     svg.selectAll("g").remove();
 
     descendants.forEach((child) => {
@@ -756,7 +787,7 @@ function DraggableTreeMap({
           .text(child.data.value || "");
       }
     });
-  }, [svg, descendants, root, colorScale]);
+  });
 
   return (
     <>
