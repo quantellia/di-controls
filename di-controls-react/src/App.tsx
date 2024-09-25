@@ -479,22 +479,22 @@ function App() {
           <fieldset>
             <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
             <Gauge
-              title="Total Revenue"
+              title="Total Revenue ($)"
               min={0}
               max={8000}
               currentValue={totalValue}
               radius={300}
             />
             <ComponentGauge
-              title="Revenue"
+              title="Revenue ($)"
               total={totalValue}
               components={[
                 {
-                  title: "Profit",
+                  title: "Profit ($)",
                   value: totalProfit,
                   color: "green",
                 },
-                { title: "Cost", value: totalCost, color: "crimson" },
+                { title: "Cost ($)", value: totalCost, color: "crimson" },
               ]}
               min={0}
               max={8000}

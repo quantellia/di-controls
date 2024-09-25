@@ -670,7 +670,6 @@ function DraggableGauge({
   });
 
   return (<>
-  
     <ArcherElement id={title} relations={[
       {
         targetId: 'profit',
