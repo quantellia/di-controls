@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   ComponentGauge,
   Gauge,
@@ -7,7 +7,8 @@ import {
 import { RadioButtonGroup } from "./components/BasicControls";
 import * as d3 from "d3";
 import { DraggableGauge } from "./components/DraggableCharts";
-import { ArcherContainer, ArcherElement } from "react-archer";
+import Draggable from "react-draggable";
+import Xarrow, { Xwrapper, useXarrow } from "react-xarrows";
 
 function App() {
   const applyFumigantNematicideOptions = [
@@ -47,6 +48,8 @@ function App() {
   const [nonFumigantBestPractices, setNonFumigantBestPractices] = useState(
     bestPracticesOptions[0]
   );
+
+  const updateXarrow = useXarrow();
 
   const soilTempWithinBoundsAndFumigated = function (
     radioButton: string,
@@ -271,10 +274,11 @@ function App() {
   `;
 
   return (
-    <ArcherContainer strokeColor="black">
+    <Xwrapper>
     <div style={{ display: "flex", gap: 32, font: "14px sans-serif" }}>
       <div style={{ display: "flex" }}>
-        <fieldset style={{ display: "grid", alignItems: "center" }}>
+        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
+        <fieldset id="costs" style={{ backgroundColor:"white", display: "grid", alignItems: "center" }}>
           <legend>Costs for field ($/acre)</legend>
           {[
             {
@@ -312,13 +316,17 @@ function App() {
             </div>
           ))}
         </fieldset>
+        </Draggable>
 
         <div style={{ display: "grid" }}>
+        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
           <fieldset
+            id="2022 nematodes"
             style={{
               display: "flex",
               height: "fit-content",
               justifyContent: "space-between",
+              backgroundColor:"white",
             }}
           >
             <legend>Root knot nematodes in field fall 2022</legend>
@@ -341,9 +349,11 @@ function App() {
               setCurrentValue={setMEnterlobii2022Found}
             />
           </fieldset>
+          </Draggable>
 
           <div style={{ display: "flex" }}>
-            <fieldset style={{ width: "fit-content", height: "fit-content" }}>
+          <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
+            <fieldset id="Spring2023" style={{ backgroundColor:"white", width: "fit-content", height: "fit-content" }}>
               <legend>Spring 2023</legend>
               <RadioButtonGroup
                 title="Crop to plant (assumes the alternate crop in 2024)"
@@ -364,9 +374,13 @@ function App() {
                 setCurrentValue={setSpring2023NonFumigantNematicide}
               />
             </fieldset>
+            </Draggable>
 
+            <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
             <fieldset
+              id="Spring2024"
               style={{
+                backgroundColor:"white",
                 width: "fit-content",
               }}
             >
@@ -384,10 +398,14 @@ function App() {
                 setCurrentValue={setSpring2024NonFumigantNematicide}
               />
             </fieldset>
+            </Draggable>
           </div>
 
+          <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
           <fieldset
-            style={{ display: "flex", justifyContent: "space-between" }}
+            id="fumigant"
+            
+            style={{ backgroundColor:"white", display: "flex", justifyContent: "space-between" }}
           >
             <legend>Fumigant</legend>
             <div style={{ display: "grid", height: "fit-content" }}>
@@ -425,6 +443,7 @@ function App() {
               ))}
             </div>
           </fieldset>
+          </Draggable>
         </div>
       </div>
 
@@ -436,7 +455,8 @@ function App() {
           width: 800,
         }}
       >
-        <div style={{ display: "flex" }}>
+        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
+        <div id="nematodeConcentration" style={{ backgroundColor:"white", display: "flex" }}>
           <LineChart
             data={[
               {
@@ -457,15 +477,18 @@ function App() {
             yAxisTitle="M. incognita per 500cc"
           />
         </div>
+        </Draggable>
 
         <div style={{ display: "flex" }}>
-          <fieldset style={{ display: "grid" }}>
+        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
+          <fieldset id="splitProfits" style={{ backgroundColor:"white", display: "grid" }}>
             <legend>Profits from this field 2023 and 2024 ($/acre)</legend>
             {[
               { title: "2023 Profits", currentValue: profit2023 },
               { title: "2024 Profits", currentValue: profit2024 },
             ].map((gauge) => (
               <Gauge
+                id={gauge.title}
                 min={0}
                 max={3200}
                 radius={300}
@@ -474,9 +497,10 @@ function App() {
               />
             ))}
           </fieldset>
+          </Draggable>
 
-          <ArcherElement id="profit">
-          <fieldset>
+          <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
+          <fieldset id="profit" style={{backgroundColor:"white",}}>
             <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
             <Gauge
               title="Total Revenue ($)"
@@ -501,13 +525,22 @@ function App() {
               radius={300}
             />
           </fieldset>
-          </ArcherElement>
+          </Draggable>
         </div>
-        <div>{explanation}</div>
+        {/* <div>{explanation}</div> */}
       </div>
-      
     </div>
-    </ArcherContainer>
+    <Xarrow start={'costs'} end={'splitProfits'} color="red" zIndex={-1}/>
+    <Xarrow start={'2022 nematodes'} end={'nematodeConcentration'} color="orange"zIndex={-1}/>
+    <Xarrow start={'Spring2023'} end={'nematodeConcentration'} color="gold"zIndex={-1}/>
+    <Xarrow start={'Spring2023'} end={'2023 Profits'} color="gold"zIndex={1}/>
+    <Xarrow start={'Spring2024'} end={'nematodeConcentration'} color="green"zIndex={-1}/>
+    <Xarrow start={'Spring2024'} end={'2024 Profits'} color="green"zIndex={1}/>
+    <Xarrow start={'fumigant'} end={'nematodeConcentration'} color="blue"zIndex={-1}/>
+    <Xarrow start={'fumigant'} end={'splitProfits'} color="blue"zIndex={-1}/>
+    <Xarrow start={'nematodeConcentration'} end={'splitProfits'} color="indigo"zIndex={-1}/>
+    <Xarrow start={'splitProfits'} end={'profit'} color="violet"zIndex={-1}/>
+  </Xwrapper>
   );
 }
 

@@ -13,6 +13,7 @@ interface GaugeProps {
   currentValue: number;
   d3ColorScheme?: d3Interpolate;
   reverseColorScheme?: boolean;
+  id?: string;
 }
 
 interface DraggableAreaChartProps {
@@ -60,6 +61,7 @@ function Gauge({
   radius = 500,
   d3ColorScheme = d3.interpolateHslLong("red", "limegreen"),
   reverseColorScheme = false,
+  id,
 }: GaugeProps) {
   const gaugeRef = useRef(null);
   const width = radius;
@@ -143,7 +145,7 @@ function Gauge({
       .text(max);
   });
 
-  return <svg ref={gaugeRef} />;
+  return <svg id={id} ref={gaugeRef} />;
 }
 
 /**
