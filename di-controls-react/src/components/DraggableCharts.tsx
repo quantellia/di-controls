@@ -669,21 +669,7 @@ function DraggableGauge({
       .text(max);
   });
 
-  return (<>
-    <ArcherElement id={title} relations={[
-      {
-        targetId: 'profit',
-        targetAnchor:'left',
-        sourceAnchor: "right",
-      }
-    ]}><div>
-      <Draggable nodeRef={gaugeRef as RefObject<HTMLElement>}>
-        <svg ref={gaugeRef} />
-        </Draggable>
-      </div>
-    </ArcherElement>
-    </>)
-  
+  return <svg ref={gaugeRef} />
 }
 
 /**
