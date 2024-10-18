@@ -4,9 +4,9 @@ import {
   DraggableTreeMap,
   DraggablePieChart,
   DraggableLineChart,
-} from "../components/DraggableCharts";
-import { Slider, RadioButtonGroup } from "../components/BasicControls";
-import { Gauge } from "../components/DataVisualizations";
+} from "../../components/DraggableCharts";
+import { Slider, RadioButtonGroup } from "../../components/BasicControls";
+import { Gauge } from "../../components/DataVisualizations";
 
 function App() {
   const total = 1200;

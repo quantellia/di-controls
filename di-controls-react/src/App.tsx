@@ -1,547 +1,118 @@
-import { useState } from "react";
-import {
-  ComponentGauge,
-  Gauge,
-  LineChart,
-} from "./components/DataVisualizations";
-import { RadioButtonGroup } from "./components/BasicControls";
-import * as d3 from "d3";
-import { DraggableGauge } from "./components/DraggableCharts";
-import Draggable from "react-draggable";
-import Xarrow, { Xwrapper, useXarrow } from "react-xarrows";
+import { useEffect, useRef } from "react";
 
 function App() {
-  const applyFumigantNematicideOptions = [
-    "Apply fumigant nematicide",
-    "Do not apply fumigant nematicide",
-  ];
-  const applyNonFumigantNematicideOptions = [
-    "Apply non-fumigant nematicide",
-    "Do not apply non-fumigant nematicide",
-  ];
-  const [spring2023Crop, setSpring2023Crop] = useState("Peanuts");
-  const [spring2023FumigantNematicide, setSpring2023FumigantNematicide] =
-    useState(applyFumigantNematicideOptions[0]);
-  const [spring2023NonFumigantNematicide, setSpring2023NonFumigantNematicide] =
-    useState(applyNonFumigantNematicideOptions[1]);
-  const [spring2024FumigantNematicide, setSpring2024FumigantNematicide] =
-    useState(applyFumigantNematicideOptions[0]);
-  const [spring2024NonFumigantNematicide, setSpring2024NonFumigantNematicide] =
-    useState(applyNonFumigantNematicideOptions[1]);
+	// const fieldsExtensions = [
+	//   'gid=20239935#gid=20239935',
+	//   'gid=1948855152#gid=1948855152',
+	//   'gid=723079312#gid=723079312',
+	//   'gid=917758739#gid=917758739',
+	//   'gid=2015691600#gid=2015691600',
+	//   'gid=930732662#gid=930732662',
+	//   'gid=2121428582#gid=2121428582',
+	//   'gid=535554991#gid=535554991',
+	//   'gid=285458021#gid=285458021',
+	//   'gid=591732537#gid=591732537'
+	// ]
 
-  const [costOfNematicides, setCostOfNematicides] = useState(219);
-  const [otherCostsForSweets, setOtherCostsForSweets] = useState(2090);
-  const [costForPeanuts, setCostForPeanuts] = useState(870);
+	// const fieldsPromises = useRef(fieldsExtensions.map((value) => fetch(
+	//   `https://docs.google.com/spreadsheets/d/1tG8a55vwriYvKbSx23KOjBLhMS-OX0oFaKzSMl9fvYI/export?format=tsv&${value}`
+	// ).then((response) => response.text().then((text) => text.replace('\r\n', '\n').split('\n')))))
 
-  const [mIncognita2022, setMIncognita2022] = useState(137);
-  const [mEnterlobii2022Found, setMEnterlobii2022Found] = useState("Found");
+	const numFields = 10;
+	const fields = useRef<number[][]>();
+	const orderAmounts = useRef<number[]>();
 
-  const bestPracticesOptions = [
-    "Followed all recommended practices",
-    "Followed most recommended practices",
-    "Did not follow recommended practices",
-  ];
-  const [soilTemp, setSoilTemp] = useState(78);
-  const [fumigantBestPractices, setFumigantBestPractices] = useState(
-    bestPracticesOptions[0]
-  );
-  const [nonFumigantBestPractices, setNonFumigantBestPractices] = useState(
-    bestPracticesOptions[0]
-  );
+	const days = 3;
+	const daysArray = Array<number>(days);
+	const ordersByDay = [
+		{
+			fields: [7, 3, 2],
+			orderAmount: [5, 5, 8]
+		},
+		{
+			fields: [0,0],
+			orderAmount: [7, 10]
+		},
+		{
+			fields: [0,0],
+			orderAmount: [2, 5]
+		},
+	];
 
-  const updateXarrow = useXarrow();
+	const sizeBounds = [3, 5.3, 10.6, 15.9, 21.2, 28.2, 40];
+	const sizeLabels = ["S", "M", "L1", "L2", "XL", "G"];
+	const sizes = sizeLabels.map((value, index) => ({
+		classification: value,
+		lowerBound: sizeBounds[index],
+		upperBound: sizeBounds[index + 1],
+	}));
 
-  const soilTempWithinBoundsAndFumigated = function (
-    radioButton: string,
-    error?: number
-  ) {
-    return (
-      40 - (error || 0) <= soilTemp &&
-      soilTemp <= 80 + (error || 0) &&
-      radioButton === applyFumigantNematicideOptions[0]
-    );
-  };
+	const potatoesPerFieldBySize = useRef<any>();
 
-  const percentKilled2023 =
-    soilTempWithinBoundsAndFumigated(spring2023FumigantNematicide) &&
-    fumigantBestPractices === bestPracticesOptions[0]
-      ? 90
-      : 0;
-  const mEnterlobiiSpring2023Present = !(
-    percentKilled2023 > 0 &&
-    spring2023NonFumigantNematicide === applyNonFumigantNematicideOptions[0] &&
-    nonFumigantBestPractices === bestPracticesOptions[0]
-  );
-  const mEnterlobiiFall2023Present = mEnterlobiiSpring2023Present;
+	const storageState = sizeLabels.map((value) => ({
+		classification: value,
+		boxesStoredPerDay: [...daysArray.fill(0)],
+	}));
 
-  const percentKilled2023MostBestPractices =
-    soilTempWithinBoundsAndFumigated(spring2023FumigantNematicide) &&
-    fumigantBestPractices === bestPracticesOptions[1]
-      ? 70
-      : 0;
-  const soilRoughlyWithinBoundsAndFumigated =
-    soilTempWithinBoundsAndFumigated(spring2023FumigantNematicide, 5) &&
-    fumigantBestPractices !== bestPracticesOptions[2]
-      ? 50
-      : 0;
-  const fumigantKillRate2023 = Math.max(
-    percentKilled2023,
-    percentKilled2023MostBestPractices,
-    soilRoughlyWithinBoundsAndFumigated,
-    0
-  );
+	const orderReports = daysArray.map(() => ({ filled: 0, remaining: 0 }));
+	const orderFieldState = ordersByDay.map((value, index) => ({
+		day: index + 1,
+		packed: Array.from({ length: value.fields.length }, (_, orderNumber) => ({
+			order: orderNumber,
+			potatoesPackedPerField: Array<number>(numFields),
+		})),
+	}));
 
-  const nonFumigantPercentKilled = function (
-    nematicideRadioButton: string,
-    radioButtonIndex: number,
-    percentKilled: number
-  ) {
-    return nematicideRadioButton === applyNonFumigantNematicideOptions[0] &&
-      nonFumigantBestPractices === bestPracticesOptions[radioButtonIndex]
-      ? percentKilled
-      : 0;
-  };
+	const costsPerOrder = ordersByDay.map((value, index) => ({
+		day: index + 1,
+		costs: Array.from({ length: value.fields.length }, (_, orderNumber) => ({
+			order: orderNumber,
+			fieldSwitching: 0,
+			storageCosts: 0,
+			wages: 0,
+		})),
+	}));
+	const automaticallyPullFromStorage = false;
 
-  const nonFumigantKillRate2023 = Math.max(
-    nonFumigantPercentKilled(spring2023NonFumigantNematicide, 0, 90),
-    nonFumigantPercentKilled(spring2023NonFumigantNematicide, 1, 70),
-    nonFumigantPercentKilled(spring2023NonFumigantNematicide, 2, 50),
-    0
-  );
+	useEffect(() => {
+		fields.current = Array.from({ length: numFields }, () =>
+			Array.from(
+				{
+					length: Math.floor(Math.random() * 300 + 800),
+				},
+				() => Math.random() * 37 + 3
+			)
+		);
+	});
 
-  const mIncognitaSpring2023 =
-    0.01 *
-    (100 - nonFumigantKillRate2023) *
-    (spring2023NonFumigantNematicide === applyNonFumigantNematicideOptions[0]
-      ? fumigantKillRate2023
-      : mIncognita2022);
+	useEffect(() => {
+		setTimeout(() => {
+			potatoesPerFieldBySize.current = fields.current?.map((field) => ({
+				smalls: field.filter(
+					(value) => value > sizes[0].lowerBound && value < sizes[0].upperBound
+				),
+				mediums: field.filter(
+					(value) => value > sizes[1].lowerBound && value < sizes[1].upperBound
+				),
+				large1s: field.filter(
+					(value) => value > sizes[2].lowerBound && value < sizes[2].upperBound
+				),
+				large2s: field.filter(
+					(value) => value > sizes[3].lowerBound && value < sizes[3].upperBound
+				),
+				extraLarges: field.filter(
+					(value) => value > sizes[4].lowerBound && value < sizes[4].upperBound
+				),
+				giants: field.filter(
+					(value) => value > sizes[5].lowerBound && value < sizes[5].upperBound
+				),
+			}));
+		}, 0);
+	}, [fields, sizes]);
 
-  const mIncognitaFall2023 = Math.floor(
-    spring2023Crop === "Sweetpotatoes"
-      ? mIncognitaSpring2023 * (1 - 0.01 * 50)
-      : mIncognitaSpring2023 + 0.01 * mIncognitaSpring2023 * 600
-  );
+	console.log(potatoesPerFieldBySize);
 
-  const percentKilled2024 =
-    soilTempWithinBoundsAndFumigated(spring2024FumigantNematicide) &&
-    fumigantBestPractices === bestPracticesOptions[0]
-      ? 90
-      : 0;
-  const mEnterlobiiSpring2024Present = !(
-    percentKilled2024 > 0 &&
-    spring2024NonFumigantNematicide === applyNonFumigantNematicideOptions[0] &&
-    nonFumigantBestPractices === bestPracticesOptions[0]
-  );
-
-  const percentKilled2024MostBestPractices =
-    soilTempWithinBoundsAndFumigated(spring2024FumigantNematicide) &&
-    fumigantBestPractices === bestPracticesOptions[1]
-      ? 70
-      : 0;
-  const soilRoughlyWithinBoundsAndFumigated2024 =
-    soilTempWithinBoundsAndFumigated(spring2024FumigantNematicide, 5) &&
-    fumigantBestPractices !== bestPracticesOptions[2]
-      ? 50
-      : 0;
-  const fumigantKillRate2024 = Math.max(
-    percentKilled2024,
-    percentKilled2024MostBestPractices,
-    soilRoughlyWithinBoundsAndFumigated2024,
-    0
-  );
-
-  const nonFumigantKillRate2024 = Math.max(
-    nonFumigantPercentKilled(spring2024NonFumigantNematicide, 0, 90),
-    nonFumigantPercentKilled(spring2024NonFumigantNematicide, 1, 70),
-    nonFumigantPercentKilled(spring2024NonFumigantNematicide, 2, 50),
-    0
-  );
-
-  const mIncognitaSpring2024 =
-    0.01 *
-    (100 - nonFumigantKillRate2024) *
-    (spring2024NonFumigantNematicide === applyNonFumigantNematicideOptions[0]
-      ? fumigantKillRate2024
-      : mIncognitaFall2023);
-
-  const plantedSweetsNotDestroyed2023 =
-    spring2023Crop === "Sweetpotatoes" &&
-    mIncognitaSpring2023 < 100 &&
-    !mEnterlobiiFall2023Present;
-
-  const valuePerAcre2023 = plantedSweetsNotDestroyed2023
-    ? 5000
-    : (spring2023Crop === "Sweetpotatoes" && 2500) || 1160;
-
-  const plantedSweetsAndAppliedNematicides =
-    spring2023Crop === "Sweetpotatoes" &&
-    (spring2023FumigantNematicide === applyFumigantNematicideOptions[0] ||
-      spring2023NonFumigantNematicide === applyNonFumigantNematicideOptions[0]);
-  const plantedPeanutsAndAppliedNematicides =
-    spring2023Crop === "Peanuts" &&
-    (spring2023FumigantNematicide === applyFumigantNematicideOptions[0] ||
-      spring2023NonFumigantNematicide === applyNonFumigantNematicideOptions[0]);
-  const costPerAcre2023 = plantedSweetsAndAppliedNematicides
-    ? otherCostsForSweets + costOfNematicides
-    : (plantedPeanutsAndAppliedNematicides &&
-        costForPeanuts + costOfNematicides) ||
-      costForPeanuts;
-
-  const profit2023 = valuePerAcre2023 - costPerAcre2023;
-
-  const plantedSweetsNotDestroyed2024 =
-    spring2023Crop === "Peanuts" &&
-    mIncognitaFall2023 < 100 &&
-    !mEnterlobiiSpring2024Present;
-
-  const valuePerAcre2024 = plantedSweetsNotDestroyed2024
-    ? 5000
-    : (spring2023Crop === "Peanuts" && 2500) || 1160;
-
-  const plantedSweetsAndAppliedNematicides2024 =
-    spring2023Crop === "Peanuts" &&
-    (spring2024FumigantNematicide === applyFumigantNematicideOptions[0] ||
-      spring2024NonFumigantNematicide === applyNonFumigantNematicideOptions[0]);
-  const plantedPeanutsAndAppliedNematicides2024 =
-    spring2023Crop === "Sweetpotatoes" &&
-    (spring2024FumigantNematicide === applyFumigantNematicideOptions[0] ||
-      spring2024NonFumigantNematicide === applyNonFumigantNematicideOptions[0]);
-  const costPerAcre2024 = plantedSweetsAndAppliedNematicides2024
-    ? otherCostsForSweets + costOfNematicides
-    : (plantedPeanutsAndAppliedNematicides2024 &&
-        costForPeanuts + costOfNematicides) ||
-      costForPeanuts;
-
-  const profit2024 = valuePerAcre2024 - costPerAcre2024;
-
-  const totalCost = costPerAcre2023 + costPerAcre2024;
-  const totalValue = valuePerAcre2023 + valuePerAcre2024;
-  const totalProfit = profit2023 + profit2024;
-
-  const explanation = `
-  When choosing to plant ${spring2023Crop} in Spring 2023 with ${mIncognita2022} M. incognita per 500cc 
-  and M. enterlobii ${
-    mEnterlobii2022Found === "Found" ? "" : "not"
-  } found in 2022 and 
-  ${
-    spring2023FumigantNematicide === applyFumigantNematicideOptions[0]
-      ? ""
-      : "not"
-  } applying fumigant nematicides while ${
-    spring2023NonFumigantNematicide === applyNonFumigantNematicideOptions[0]
-      ? ""
-      : "not"
-  } applying non-fumigant nematicides and following ${
-    spring2023FumigantNematicide === applyFumigantNematicideOptions[0]
-      ? (fumigantBestPractices === bestPracticesOptions[0] &&
-          "all recommended practices for fumigants") ||
-        (fumigantBestPractices === bestPracticesOptions[1] &&
-          "some recommended practices for fumigants") ||
-        (fumigantBestPractices === bestPracticesOptions[2] &&
-          "no recommended practices for fumigants")
-      : ""
-  } ${
-    (spring2023FumigantNematicide === applyFumigantNematicideOptions[0] &&
-      spring2023NonFumigantNematicide ===
-        applyNonFumigantNematicideOptions[0] &&
-      "and") ||
-    ""
-  } ${
-    spring2023NonFumigantNematicide === applyNonFumigantNematicideOptions[0]
-      ? (nonFumigantBestPractices === bestPracticesOptions[0] &&
-          "all recommended practices for non-fumigants") ||
-        (nonFumigantBestPractices === bestPracticesOptions[1] &&
-          "some recommended practices for non-fumigants") ||
-        (nonFumigantBestPractices === bestPracticesOptions[2] &&
-          "no recommended practices for non-fumigants")
-      : ""
-  } with an average soil temperature of ${soilTemp}°F, assuming a change in crops planted in Spring 2024, you will see:\n
-  ${mIncognitaSpring2023} M. incognita present per 500cc 
-  and M. enterlobii ${
-    mEnterlobiiSpring2023Present ? "" : "not"
-  } present in Spring 2023,\n
-  ${mIncognitaFall2023} M. incognita present per 500cc 
-  and M. enterlobii ${
-    mEnterlobiiFall2023Present ? "" : "not"
-  } present in Fall 2023, and\n  
-  ${mIncognitaSpring2024} M. incognita present per 500cc 
-  and M. enterlobii ${
-    mEnterlobiiSpring2024Present ? "" : "not"
-  } present in Spring 2024.\n
-  Thus, with the cost of nematicides being $${costOfNematicides}, the cost of sweetpotatoes being $${otherCostsForSweets} 
-  and the cost of peanuts being $${costForPeanuts}, you will see a profit of $${profit2023} in 2023 and $${profit2024} in 2024
-  for a total profit of $${totalProfit}.
-  `;
-
-  return (
-    <Xwrapper>
-    <div style={{ display: "flex", gap: 32, font: "14px sans-serif" }}>
-      <div style={{ display: "flex" }}>
-        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-        <fieldset id="costs" style={{ backgroundColor:"white", display: "grid", alignItems: "center" }}>
-          <legend>Costs for field ($/acre)</legend>
-          {[
-            {
-              title: "Cost of nematicides ($)",
-              max: 250,
-              currentValue: costOfNematicides,
-              set: setCostOfNematicides,
-            },
-            {
-              title: "Other costs for sweets ($)",
-              min: 1800,
-              max: 2200,
-              currentValue: otherCostsForSweets,
-              set: setOtherCostsForSweets,
-            },
-            {
-              title: "Cost for peanuts ($)",
-              min: 780,
-              max: 1000,
-              currentValue: costForPeanuts,
-              set: setCostForPeanuts,
-            },
-          ].map((gauge) => (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <DraggableGauge
-                min={gauge.min || 0}
-                max={gauge.max}
-                radius={300}
-                title={gauge.title}
-                currentValue={gauge.currentValue}
-                setCurrentValue={gauge.set}
-                reverseColorScheme
-                stroke="black"
-              />
-            </div>
-          ))}
-        </fieldset>
-        </Draggable>
-
-        <div style={{ display: "grid" }}>
-        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-          <fieldset
-            id="2022 nematodes"
-            style={{
-              display: "flex",
-              height: "fit-content",
-              justifyContent: "space-between",
-              backgroundColor:"white",
-            }}
-          >
-            <legend>Root knot nematodes in field fall 2022</legend>
-            <div style={{ display: "grid", width: "fit-content" }}>
-              <DraggableGauge
-                min={0}
-                max={150}
-                radius={300}
-                title={`M. incognita per 500cc`}
-                currentValue={mIncognita2022}
-                setCurrentValue={setMIncognita2022}
-                reverseColorScheme
-                stroke="black"
-              />
-            </div>
-            <RadioButtonGroup
-              title="M. enterlobii found"
-              data={["Found", "Not Found"]}
-              currentValue={mEnterlobii2022Found}
-              setCurrentValue={setMEnterlobii2022Found}
-            />
-          </fieldset>
-          </Draggable>
-
-          <div style={{ display: "flex" }}>
-          <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-            <fieldset id="Spring2023" style={{ backgroundColor:"white", width: "fit-content", height: "fit-content" }}>
-              <legend>Spring 2023</legend>
-              <RadioButtonGroup
-                title="Crop to plant (assumes the alternate crop in 2024)"
-                data={["Peanuts", "Sweetpotatoes"]}
-                currentValue={spring2023Crop}
-                setCurrentValue={setSpring2023Crop}
-              />
-              <RadioButtonGroup
-                title="Fumigant Nematicide 2023"
-                data={applyFumigantNematicideOptions}
-                currentValue={spring2023FumigantNematicide}
-                setCurrentValue={setSpring2023FumigantNematicide}
-              />
-              <RadioButtonGroup
-                title="Non-Fumigant Nematicide 2023"
-                data={applyNonFumigantNematicideOptions}
-                currentValue={spring2023NonFumigantNematicide}
-                setCurrentValue={setSpring2023NonFumigantNematicide}
-              />
-            </fieldset>
-            </Draggable>
-
-            <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-            <fieldset
-              id="Spring2024"
-              style={{
-                backgroundColor:"white",
-                width: "fit-content",
-              }}
-            >
-              <legend>Spring 2024</legend>
-              <RadioButtonGroup
-                title="Fumigant Nematicide 2024"
-                data={applyFumigantNematicideOptions}
-                currentValue={spring2024FumigantNematicide}
-                setCurrentValue={setSpring2024FumigantNematicide}
-              />
-              <RadioButtonGroup
-                title="Non-Fumigant Nematicide 2024"
-                data={applyNonFumigantNematicideOptions}
-                currentValue={spring2024NonFumigantNematicide}
-                setCurrentValue={setSpring2024NonFumigantNematicide}
-              />
-            </fieldset>
-            </Draggable>
-          </div>
-
-          <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-          <fieldset
-            id="fumigant"
-            
-            style={{ backgroundColor:"white", display: "flex", justifyContent: "space-between" }}
-          >
-            <legend>Fumigant</legend>
-            <div style={{ display: "grid", height: "fit-content" }}>
-              <DraggableGauge
-                min={0}
-                max={102}
-                radius={300}
-                title={`Avg Soil Temp (°F)`}
-                currentValue={soilTemp}
-                setCurrentValue={setSoilTemp}
-                d3ColorScheme={d3.interpolateHslLong("deepskyblue", "red")}
-                stroke="black"
-              />
-            </div>
-
-            <div>
-              {[
-                {
-                  title: "Fumigant best practices",
-                  currentValue: fumigantBestPractices,
-                  set: setFumigantBestPractices,
-                },
-                {
-                  title: "Non-fumigant best practices",
-                  currentValue: nonFumigantBestPractices,
-                  set: setNonFumigantBestPractices,
-                },
-              ].map((buttonGroup) => (
-                <RadioButtonGroup
-                  title={buttonGroup.title}
-                  data={bestPracticesOptions}
-                  currentValue={buttonGroup.currentValue}
-                  setCurrentValue={buttonGroup.set}
-                />
-              ))}
-            </div>
-          </fieldset>
-          </Draggable>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 32,
-          width: 800,
-        }}
-      >
-        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-        <div id="nematodeConcentration" style={{ backgroundColor:"white", display: "flex" }}>
-          <LineChart
-            data={[
-              {
-                title: "Spring 2023",
-                value: mIncognitaSpring2023,
-              },
-              {
-                title: "Fall 2023",
-                value: mIncognitaFall2023,
-              },
-              {
-                title: "Spring 2024",
-                value: mIncognitaSpring2024,
-              },
-            ]}
-            height={200}
-            stepHeight={50}
-            yAxisTitle="M. incognita per 500cc"
-          />
-        </div>
-        </Draggable>
-
-        <div style={{ display: "flex" }}>
-        <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-          <fieldset id="splitProfits" style={{ backgroundColor:"white", display: "grid" }}>
-            <legend>Profits from this field 2023 and 2024 ($/acre)</legend>
-            {[
-              { title: "2023 Profits", currentValue: profit2023 },
-              { title: "2024 Profits", currentValue: profit2024 },
-            ].map((gauge) => (
-              <Gauge
-                id={gauge.title}
-                min={0}
-                max={3200}
-                radius={300}
-                title={gauge.title}
-                currentValue={gauge.currentValue}
-              />
-            ))}
-          </fieldset>
-          </Draggable>
-
-          <Draggable onDrag={updateXarrow} onStop={updateXarrow}>
-          <fieldset id="profit" style={{backgroundColor:"white",}}>
-            <legend>Total 2023 + 2024 profit from field ($/acre)</legend>
-            <Gauge
-              title="Total Revenue ($)"
-              min={0}
-              max={8000}
-              currentValue={totalValue}
-              radius={300}
-            />
-            <ComponentGauge
-              title="Revenue ($)"
-              total={totalValue}
-              components={[
-                {
-                  title: "Profit ($)",
-                  value: totalProfit,
-                  color: "green",
-                },
-                { title: "Cost ($)", value: totalCost, color: "crimson" },
-              ]}
-              min={0}
-              max={8000}
-              radius={300}
-            />
-          </fieldset>
-          </Draggable>
-        </div>
-        {/* <div>{explanation}</div> */}
-      </div>
-    </div>
-    <Xarrow start={'costs'} end={'splitProfits'} color="red" zIndex={-1}/>
-    <Xarrow start={'2022 nematodes'} end={'nematodeConcentration'} color="orange"zIndex={-1}/>
-    <Xarrow start={'Spring2023'} end={'nematodeConcentration'} color="gold"zIndex={-1}/>
-    <Xarrow start={'Spring2023'} end={'2023 Profits'} color="gold"zIndex={1}/>
-    <Xarrow start={'Spring2024'} end={'nematodeConcentration'} color="green"zIndex={-1}/>
-    <Xarrow start={'Spring2024'} end={'2024 Profits'} color="green"zIndex={1}/>
-    <Xarrow start={'fumigant'} end={'nematodeConcentration'} color="blue"zIndex={-1}/>
-    <Xarrow start={'fumigant'} end={'splitProfits'} color="blue"zIndex={-1}/>
-    <Xarrow start={'nematodeConcentration'} end={'splitProfits'} color="indigo"zIndex={-1}/>
-    <Xarrow start={'splitProfits'} end={'profit'} color="violet"zIndex={-1}/>
-  </Xwrapper>
-  );
+	return <></>;
 }
 
 export default App;
