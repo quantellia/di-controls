@@ -43,6 +43,17 @@ interface ComponentGaugeProps {
   d3ColorScheme?: d3Interpolate;
 }
 
+interface StackedBarplotProps {
+  width: number;
+  height: number;
+  data: {
+    title: string;
+    xAxisLabels: string[];
+    components: { title: string; values: number[]; color?: string }[];
+  };
+  maxY?: number;
+}
+
 /**
  *
  * @param {number} currentValue stateful value with the number to represent in the gauge
@@ -431,5 +442,117 @@ function ComponentGauge({
 
   return <svg ref={gaugeRef} />;
 }
+
+export const StackedBarplot = ({
+  width,
+  height,
+  data,
+  maxY = 200,
+}: StackedBarplotProps) => {
+  // bounds = area inside the graph axis = calculated by substracting the margins
+  const axesRef = useRef(null);
+  const boundsWidth = width - 80;
+  const boundsHeight = height - 80;
+
+  const labels = data.xAxisLabels;
+  const allSubgroups = data.components.map((component) => component.title);
+
+  const organizedData = data.xAxisLabels.map((label, index) => {
+    const stackArray = data.components.map((component) => [
+      component.title,
+      component.values[index],
+      component.color,
+    ]);
+    const stack = Object.fromEntries(stackArray);
+
+    return {
+      title: label,
+      ...stack,
+    };
+  });
+
+  // Data Wrangling: stack the data
+  const stackSeries = d3.stack().keys(allSubgroups).order(d3.stackOrderNone);
+  //.offset(d3.stackOffsetNone);
+  const series = stackSeries(organizedData);
+
+  // Y axis
+  const yScale = useMemo(() => {
+    return d3
+      .scaleLinear()
+      .domain([0, maxY || 0])
+      .range([boundsHeight, 0]);
+  }, [boundsHeight, maxY]);
+
+  // X axis
+  const xScale = useMemo(() => {
+    return d3
+      .scaleBand<string>()
+      .domain(labels)
+      .range([0, boundsWidth])
+      .padding(0.05);
+  }, [boundsWidth, labels]);
+
+  // Color Scale
+  const colorScale = d3
+    .scaleOrdinal<string>()
+    .domain(labels)
+    .range(["#e0ac2b", "#e85252", "#6689c6", "#9a6fb0", "#a53253"]);
+
+  // Render the X and Y axis using d3.js, not react
+  useEffect(() => {
+    const svgElement = d3.select(axesRef.current);
+    svgElement.selectAll("*").remove();
+    const xAxisGenerator = d3.axisBottom(xScale);
+    svgElement
+      .append("g")
+      .attr("transform", "translate(0," + boundsHeight + ")")
+      .call(xAxisGenerator);
+
+    const yAxisGenerator = d3.axisLeft(yScale);
+    svgElement.append("g").call(yAxisGenerator);
+  }, [xScale, yScale, boundsHeight]);
+
+  const rectangles = series.map((subgroup, i) => {
+    return (
+      <g key={i}>
+        {subgroup.map((group, j) => {
+          return (
+            <rect
+              key={j}
+              x={xScale(group.data.title)}
+              y={yScale(group[1])}
+              height={Math.max(yScale(group[0]) - yScale(group[1]) || 0, 0)}
+              width={xScale.bandwidth()}
+              fill={data.components[i].color || colorScale(subgroup.key)}
+              opacity={0.9}
+            ></rect>
+          );
+        })}
+      </g>
+    );
+  });
+
+  return (
+    <>
+      <svg width={width} height={height}>
+        <g
+          width={boundsWidth}
+          height={boundsHeight}
+          transform={`translate(${[50, 30].join(",")})`}
+        >
+          {rectangles}
+        </g>
+        <g
+          width={boundsWidth}
+          height={boundsHeight}
+          ref={axesRef}
+          transform={`translate(${[50, 30].join(",")})`}
+        />
+        <text transform="translate(30, 15)">{`${data.title}`}</text>
+      </svg>
+    </>
+  );
+};
 
 export { Gauge, LineChart, ComponentGauge };

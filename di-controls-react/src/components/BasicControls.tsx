@@ -18,6 +18,13 @@ interface RadioButtonGroupProps {
   setCurrentValue: (value: string) => void;
 }
 
+interface CheckBoxGroupProps {
+  title: string;
+  vertical?: boolean;
+  currentValue: { name: string; checked: boolean }[] | undefined;
+  setCurrentValue: (value: { name: string; checked: boolean }[]) => void;
+}
+
 function Slider({
   title,
   styling = "slider",
@@ -88,4 +95,44 @@ function RadioButtonGroup({
   );
 }
 
-export { Slider, RadioButtonGroup };
+function CheckBoxGroup({
+  title,
+  vertical = true,
+  currentValue,
+  setCurrentValue,
+}: CheckBoxGroupProps) {
+  return (
+    <fieldset
+      style={{
+        display: vertical ? "block" : "flex",
+        height: "fit-content",
+        width: "fit-content",
+      }}
+    >
+      <legend>{title}</legend>
+      {currentValue?.map((checkbox, index) => (
+        <>
+          <div>
+            <input
+              type="checkbox"
+              id={checkbox.name}
+              name={title}
+              value={checkbox.name}
+              onClick={() => {
+                const newArray = currentValue;
+                newArray[index] = { ...checkbox, checked: !checkbox.checked };
+                setCurrentValue([...newArray]);
+              }}
+              checked={checkbox.checked}
+              readOnly
+              key={`${title}-${checkbox.name}`}
+            />
+            <label htmlFor={checkbox.name}>{checkbox.name}</label>
+          </div>
+        </>
+      ))}
+    </fieldset>
+  );
+}
+
+export { Slider, RadioButtonGroup, CheckBoxGroup };
