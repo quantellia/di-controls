@@ -1,13 +1,10 @@
 import { useRef, useState } from "react";
-import {
-  ComponentGauge,
-  Gauge,
-  StackedBarplot,
-} from "./components/DataVisualizations";
+import { Gauge, StackedBarplot } from "./components/DataVisualizations";
 import { CheckBoxGroup } from "./components/BasicControls";
 import * as d3 from "d3";
 import Draggable from "react-draggable";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
+import { Dial } from "./components/Controls";
 
 interface SeparatedField {
   [key: string]: number[];
@@ -21,6 +18,7 @@ interface SeparatedField {
 
 const sizeBounds = [3, 5.3, 10.6, 15.9, 21.2, 28.2, 40];
 const sizeLabels = ["S", "M", "L1", "L2", "XL", "G"];
+const semanticCounting = ["First", "Second", "Third"];
 
 function isBetween(value: number, lowerBound: number, upperBound: number) {
   return lowerBound <= value && value < upperBound;
@@ -97,11 +95,6 @@ function App() {
 
   const updateXarrow = useXarrow();
   const serializePosition = (key: string) => {
-    console.log(
-      window
-        // @ts-expect-error it exists bro
-        .getComputedStyle(document.getElementById(key))
-    );
     localStorage.setItem(
       key,
       window
@@ -126,9 +119,9 @@ function App() {
   };
 
   const numFields = 10;
-  const fieldCheckboxesObject = Array.from(
-    { length: numFields },
-    (_, field) => ({ name: `Field ${field + 1}`, checked: false })
+  const fieldSelectionArray = Array.from(
+    { length: numFields + 1 },
+    (_, field) => (field === numFields ? "No Field" : `Field ${field + 1}`)
   );
 
   const sizeCheckboxesObject = sizeLabels.map((label) => ({
@@ -136,39 +129,39 @@ function App() {
     checked: false,
   }));
 
-  const [day1Order1Fields, setDay1Order1Fields] = useState(
-    fieldCheckboxesObject.map((field) =>
-      field.name === "Field 5" ? { ...field, checked: true } : field
-    )
-  );
+  const [day1Order1Fields, setDay1Order1Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
   const day1Order1Boxes = 5;
   const [day1Order1Sizes, setDay1Order1Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
-      size.name === "L2" ? { ...size, checked: true } : size
+      ["S", "L1"].includes(size.name) ? { ...size, checked: true } : size
     )
   );
 
-  const [day1Order2Fields, setDay1Order2Fields] = useState(
-    fieldCheckboxesObject.map((field) =>
-      field.name === "Field 2" ? { ...field, checked: true } : field
-    )
-  );
+  const [day1Order2Fields, setDay1Order2Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
   const day1Order2Boxes = 5;
   const [day1Order2Sizes, setDay1Order2Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
-      size.name === "L2" ? { ...size, checked: true } : size
+      ["L1", "XL"].includes(size.name) ? { ...size, checked: true } : size
     )
   );
 
-  const [day1Order3Fields, setDay1Order3Fields] = useState(
-    fieldCheckboxesObject.map((field) =>
-      field.name === "Field 1" ? { ...field, checked: true } : field
-    )
-  );
+  const [day1Order3Fields, setDay1Order3Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
   const day1Order3Boxes = 7;
   const [day1Order3Sizes, setDay1Order3Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
-      size.name === "L2" ? { ...size, checked: true } : size
+      ["M", "L2"].includes(size.name) ? { ...size, checked: true } : size
     )
   );
 
@@ -203,48 +196,60 @@ function App() {
   const orders = [
     {
       order: 1,
+      unmappedFields: day1Order1Fields,
       fields: day1Order1Fields
-        .map((field, index) => (field.checked ? index : undefined))
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
         .filter((value) => value !== undefined),
+      setFields: setDay1Order1Fields,
       numberOfBoxes: day1Order1Boxes,
       sizes: day1Order1Sizes
         .map((size, index) => (size.checked ? index : undefined))
         .filter((value) => value !== undefined),
-      allFields: day1Order1Fields, // TODO: find a way to merge this into the 'fields' attribute for all orders
-      setFields: setDay1Order1Fields,
       allSizes: day1Order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
       setSizes: setDay1Order1Sizes,
       colour: "#81a5c3",
+      colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
     },
     {
       order: 2,
+      unmappedFields: day1Order2Fields,
       fields: day1Order2Fields
-        .map((field, index) => (field.checked ? index : undefined))
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
         .filter((value) => value !== undefined),
+      setFields: setDay1Order2Fields,
       numberOfBoxes: day1Order2Boxes,
       sizes: day1Order2Sizes
         .map((size, index) => (size.checked ? index : undefined))
         .filter((value) => value !== undefined),
-      allFields: day1Order2Fields,
-      setFields: setDay1Order2Fields,
       allSizes: day1Order2Sizes,
       setSizes: setDay1Order2Sizes,
       colour: "#8f79aa",
+      colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
     },
     {
       order: 3,
+      unmappedFields: day1Order3Fields,
       fields: day1Order3Fields
-        .map((field, index) => (field.checked ? index : undefined))
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
         .filter((value) => value !== undefined),
       numberOfBoxes: day1Order3Boxes,
+      setFields: setDay1Order3Fields,
       sizes: day1Order3Sizes
         .map((size, index) => (size.checked ? index : undefined))
         .filter((value) => value !== undefined),
-      allFields: day1Order3Fields,
-      setFields: setDay1Order3Fields,
       allSizes: day1Order3Sizes,
       setSizes: setDay1Order3Sizes,
       colour: "#c78dd0",
+      colourScheme: d3.interpolateHsl("#a047ae", "#ead4ed"),
     },
   ];
 
@@ -399,7 +404,7 @@ function App() {
 
     const costs = {
       fieldSwitchingCost: numFieldSwitches * switchFieldCost,
-      storageCost: orderStatus.boxesPacked * storageCostPerBox,
+      storageCost: 0,
       wagesCost:
         ((numFieldSwitches * minutesSpentToSwitchFields +
           (orderStatus.ouncesPacked.sum / 16) * packMinutesPerPound) /
@@ -412,7 +417,7 @@ function App() {
     return orderStatus;
   });
 
-  // console.log("orderDetails", orderDetails);
+  console.log("orderDetails", orderDetails);
 
   // move the toStorage stuff in each order to storage
   sizeLabels.map((size, index) => {
@@ -423,6 +428,13 @@ function App() {
         ) / boxOunces
       );
     });
+  });
+
+  orderDetails.forEach((order, orderIndex) => {
+    order.costs.storageCost =
+      Object.values(storage)
+        .map((size) => size[orderIndex])
+        .reduce((acc, cur) => acc + cur) * storageCostPerBox;
   });
 
   const totalCost = RoundToDecimal(
@@ -449,7 +461,7 @@ function App() {
 
   return (
     <Xwrapper>
-      <div style={{ width: 1920, height: 1080, fontFamily: "sans-serif" }}>
+      <div style={{ /*width: 1920, */ height: 1080, fontFamily: "sans-serif" }}>
         <div style={{ display: "flex", gridAutoFlow: "column" }}>
           <Draggable
             defaultPosition={getDefaultPos("orders")}
@@ -459,22 +471,32 @@ function App() {
               serializePosition("orders");
             }}
           >
-            <fieldset style={{ display: "flex" }} id="orders">
+            <fieldset style={{ display: "grid" }} id="orders">
               <legend>Orders</legend>
               {orders.map((order, index) => {
                 return (
-                  <fieldset>
+                  <fieldset style={{ display: "flex" }}>
                     <legend>{`Order ${index + 1}`}</legend>
-                    <CheckBoxGroup
-                      title={`Order ${index + 1} Field`}
-                      currentValue={order.allFields}
-                      setCurrentValue={order.setFields}
-                      key={`${index}-checkboxgroupfield`}
-                    />
+                    {order.unmappedFields.map((field, fieldIndex) => (
+                      <Dial
+                        currentValue={field}
+                        setCurrentValue={(newValue) => {
+                          order.setFields(
+                            order.unmappedFields.map((value, index) =>
+                              index === fieldIndex ? newValue.toString() : value
+                            )
+                          );
+                        }}
+                        title={`${semanticCounting[fieldIndex]} Field`}
+                        values={fieldSelectionArray}
+                        radius={200}
+                        d3ColorScheme={order.colourScheme}
+                      />
+                    ))}
                     <CheckBoxGroup
                       title={`Order ${index + 1} Size`}
                       currentValue={order.allSizes}
-                      setCurrentValue={order.setSizes}
+                      // setCurrentValue={order.setSizes}
                       key={`${index}-checkboxgrouporder`}
                     />
                   </fieldset>
@@ -627,86 +649,6 @@ function App() {
 
             <div style={{ display: "flex" }}>
               <Draggable
-                defaultPosition={getDefaultPos("costs")}
-                onDrag={updateXarrow}
-                onStop={() => {
-                  updateXarrow();
-                  serializePosition("costs");
-                }}
-              >
-                <fieldset id="costs">
-                  <legend>Costs</legend>
-                  {orderDetails.map((order, index) => {
-                    const totalCost =
-                      order.costs.fieldSwitchingCost +
-                      order.costs.storageCost +
-                      order.costs.wagesCost;
-                    return (
-                      <ComponentGauge
-                        title={`Order ${index + 1}`}
-                        components={[
-                          ...(order.costs.fieldSwitchingCost
-                            ? [
-                                {
-                                  color: "#b56d77",
-                                  title: "Field Switching",
-                                  value: RoundToDecimal(
-                                    order.costs.fieldSwitchingCost,
-                                    2
-                                  ),
-                                },
-                              ]
-                            : []),
-                          {
-                            title: "Storage",
-                            value: RoundToDecimal(order.costs.storageCost, 2),
-                            color: "#e19179",
-                          },
-                          {
-                            title: "Wages",
-                            value: RoundToDecimal(order.costs.wagesCost, 2),
-                            color: "#eabd7d",
-                          },
-                        ]}
-                        total={RoundToDecimal(totalCost, 2)}
-                        min={0}
-                        max={100}
-                        radius={200}
-                      />
-                    );
-                  })}
-                </fieldset>
-              </Draggable>
-
-              <Draggable
-                defaultPosition={getDefaultPos("revenue")}
-                onDrag={updateXarrow}
-                onStop={() => {
-                  updateXarrow();
-                  serializePosition("revenue");
-                }}
-              >
-                <fieldset id="revenue">
-                  <legend>Revenue</legend>
-                  <ComponentGauge
-                    title="Revenue"
-                    components={orderDetails.map((order, index) => ({
-                      title: `Order ${index + 1}`,
-                      value: RoundToDecimal(
-                        Math.ceil(order.boxesPacked) * revenuePerBox,
-                        2
-                      ),
-                      color: order.colour,
-                    }))}
-                    total={totalRevenue}
-                    min={0}
-                    max={500}
-                    radius={200}
-                  />
-                </fieldset>
-              </Draggable>
-
-              <Draggable
                 defaultPosition={getDefaultPos("profit")}
                 onDrag={updateXarrow}
                 onStop={() => {
@@ -716,24 +658,46 @@ function App() {
               >
                 <fieldset id="profit">
                   <legend>Profit</legend>
-                  <ComponentGauge
-                    title="Profit"
-                    components={[
-                      {
-                        title: "Costs",
-                        value: totalCost,
-                        color: "#b56d77",
-                      },
-                      {
-                        title: "Profit",
-                        value: RoundToDecimal(totalRevenue - totalCost, 2),
-                        color: "#95d491",
-                      },
-                    ]}
-                    total={RoundToDecimal(totalRevenue - totalCost, 2)}
-                    min={0}
-                    max={totalRevenue}
-                    radius={200}
+                  <StackedBarplot
+                    width={500}
+                    height={300}
+                    data={{
+                      title: "Cost / Profit Split",
+                      xAxisLabels: [
+                        "Field Switching Cost",
+                        "Storage Cost",
+                        "Wages Cost",
+                        "Revenue",
+                      ],
+                      components: [
+                        ...orderDetails.map((order, orderIndex) => {
+                          const totalCost =
+                            order.costs.fieldSwitchingCost +
+                            order.costs.storageCost +
+                            order.costs.wagesCost;
+
+                          return {
+                            title: `Order ${orderIndex + 1}`,
+                            values: [
+                              order.costs.fieldSwitchingCost,
+                              order.costs.storageCost,
+                              order.costs.wagesCost,
+                              totalCost,
+                            ],
+                            color: order.colour,
+                          };
+                        }),
+                        {
+                          title: "Profit",
+                          values: [
+                            ...Array(orders.length).fill(0),
+                            RoundToDecimal(totalRevenue - totalCost, 2),
+                          ],
+                          color: "#95d491",
+                        },
+                      ],
+                    }}
+                    maxY={totalRevenue + totalRevenue / 10}
                   />
                 </fieldset>
               </Draggable>
@@ -742,14 +706,11 @@ function App() {
         </div>
       </div>
       <Xarrow start={"orders"} end={"fieldMakeup"} color="#b56d77" />
-      <Xarrow start={"orders"} end={"costs"} color="#b56d77" />
+      <Xarrow start={"orders"} end={"profit"} color="#b56d77" />
       <Xarrow start={"fieldMakeup"} end={"boxesPacked"} color="#e19179" />
       <Xarrow start={"fieldMakeup"} end={"storage"} color="#e19179" />
-      <Xarrow start={"boxesPacked"} end={"costs"} color="#e9e588" />
-      <Xarrow start={"boxesPacked"} end={"revenue"} color="#e9e588" />
-      <Xarrow start={"storage"} end={"costs"} color="#95d491" />
-      <Xarrow start={"costs"} end={"profit"} color="#81a5c3" />
-      <Xarrow start={"revenue"} end={"profit"} color="#8f79aa" />
+      <Xarrow start={"boxesPacked"} end={"profit"} color="#e9e588" />
+      <Xarrow start={"storage"} end={"profit"} color="#95d491" />
     </Xwrapper>
   );
 }

@@ -22,7 +22,7 @@ interface CheckBoxGroupProps {
   title: string;
   vertical?: boolean;
   currentValue: { name: string; checked: boolean }[] | undefined;
-  setCurrentValue: (value: { name: string; checked: boolean }[]) => void;
+  setCurrentValue?: (value: { name: string; checked: boolean }[]) => void;
 }
 
 function Slider({
@@ -119,9 +119,11 @@ function CheckBoxGroup({
               name={title}
               value={checkbox.name}
               onClick={() => {
-                const newArray = currentValue;
-                newArray[index] = { ...checkbox, checked: !checkbox.checked };
-                setCurrentValue([...newArray]);
+                if (setCurrentValue) {
+                  const newArray = currentValue;
+                  newArray[index] = { ...checkbox, checked: !checkbox.checked };
+                  setCurrentValue([...newArray]);
+                }
               }}
               checked={checkbox.checked}
               readOnly
