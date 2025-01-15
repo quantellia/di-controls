@@ -52,6 +52,7 @@ interface StackedBarplotProps {
     components: { title: string; values: number[]; color?: string }[];
   };
   maxY?: number;
+  stepHeight?: number;
 }
 
 /**
@@ -448,6 +449,7 @@ export const StackedBarplot = ({
   height,
   data,
   maxY = 200,
+  stepHeight = 1,
 }: StackedBarplotProps) => {
   // bounds = area inside the graph axis = calculated by substracting the margins
   const axesRef = useRef(null);
@@ -480,9 +482,14 @@ export const StackedBarplot = ({
   const yScale = useMemo(() => {
     return d3
       .scaleLinear()
-      .domain([0, maxY || 0])
+      .domain([
+        0,
+        (maxY || 1) > stepHeight
+          ? stepHeight * Math.ceil((maxY || 1) / stepHeight)
+          : stepHeight,
+      ])
       .range([boundsHeight, 0]);
-  }, [boundsHeight, maxY]);
+  }, [boundsHeight, maxY, stepHeight]);
 
   // X axis
   const xScale = useMemo(() => {

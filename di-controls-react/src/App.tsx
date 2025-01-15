@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Gauge, StackedBarplot } from "./components/DataVisualizations";
 import { CheckBoxGroup } from "./components/BasicControls";
 import * as d3 from "d3";
@@ -15,6 +15,48 @@ interface SeparatedField {
   XL: number[];
   G: number[];
 }
+
+interface OrderObject {
+  order: number;
+  unmappedFields: string[];
+  fields: number[];
+  setFields: React.Dispatch<React.SetStateAction<string[]>>;
+  numberOfBoxes: number;
+  sizes: number[];
+  allSizes: {
+    name: string;
+    checked: boolean;
+  }[];
+  setSizes: React.Dispatch<
+    React.SetStateAction<
+      {
+        name: string;
+        checked: boolean;
+      }[]
+    >
+  >;
+  colour: string;
+  colourScheme: (t: number) => string;
+}
+
+interface OuncesPackedObject {
+  sum: number;
+  operations: number[];
+  toStorage: number[][][];
+  toBox: number[][][];
+}
+
+type OrderStatusObject = OrderObject & {
+  ouncesPacked: OuncesPackedObject;
+  isFulfilled: boolean;
+  storedBoxes: number[][];
+  boxesPacked: number;
+  costs: {
+    fieldSwitchingCost: number;
+    storageCost: number;
+    wagesCost: number;
+  };
+};
 
 const sizeBounds = [3, 5.3, 10.6, 15.9, 21.2, 28.2, 40];
 const sizeLabels = ["S", "M", "L1", "L2", "XL", "G"];
@@ -76,22 +118,46 @@ const getMaxSum = (
 // end theft
 
 function App() {
-  // const fieldsExtensions = [
-  //   'gid=20239935#gid=20239935',
-  //   'gid=1948855152#gid=1948855152',
-  //   'gid=723079312#gid=723079312',
-  //   'gid=917758739#gid=917758739',
-  //   'gid=2015691600#gid=2015691600',
-  //   'gid=930732662#gid=930732662',
-  //   'gid=2121428582#gid=2121428582',
-  //   'gid=535554991#gid=535554991',
-  //   'gid=285458021#gid=285458021',
-  //   'gid=591732537#gid=591732537'
-  // ]
+  const [fieldsArray, setFieldsArray] = useState<number[][]>([[]]);
 
-  // const fieldsPromises = useRef(fieldsExtensions.map((value) => fetch(
-  //   `https://docs.google.com/spreadsheets/d/1tG8a55vwriYvKbSx23KOjBLhMS-OX0oFaKzSMl9fvYI/export?format=tsv&${value}`
-  // ).then((response) => response.text().then((text) => text.replace('\r\n', '\n').split('\n')))))
+  const fields = fieldsArray.map((field) => ({
+    length: field.length,
+    potatoes: field,
+    potatoesTakenPerOrder: {
+      total: 0,
+      inOperation: [[0]],
+    },
+  }));
+
+  useEffect(() => {
+    const fieldsExtensions = [
+      "gid=20239935#gid=20239935",
+      "gid=1948855152#gid=1948855152",
+      "gid=723079312#gid=723079312",
+      "gid=917758739#gid=917758739",
+      "gid=2015691600#gid=2015691600",
+      "gid=930732662#gid=930732662",
+      "gid=2121428582#gid=2121428582",
+      "gid=535554991#gid=535554991",
+      "gid=285458021#gid=285458021",
+      "gid=591732537#gid=591732537",
+    ];
+
+    const generatedArr: number[][] = [[]];
+
+    fieldsExtensions.map(async (value, index) => {
+      const response = await fetch(
+        `https://docs.google.com/spreadsheets/d/1tG8a55vwriYvKbSx23KOjBLhMS-OX0oFaKzSMl9fvYI/export?format=tsv&${value}`
+      );
+      generatedArr[index] = (await response.text())
+        .valueOf()
+        .replace("\r\n", "\n")
+        .split("\n")
+        .map((line) => parseFloat(line.split("\t")[1]))
+        .filter((num) => !Number.isNaN(num));
+    });
+    setFieldsArray(generatedArr);
+  }, []);
 
   const updateXarrow = useXarrow();
   const serializePosition = (key: string) => {
@@ -134,8 +200,18 @@ function App() {
     "No Field",
     "No Field",
   ]);
-  const day1Order1Boxes = 5;
-  const [day1Order1Sizes, setDay1Order1Sizes] = useState(
+  const [day2Order1Fields, setDay2Order1Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
+  const [day3Order1Fields, setDay3Order1Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
+  const order1Boxes = 5;
+  const [order1Sizes, setOrder1Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
       ["S", "L1"].includes(size.name) ? { ...size, checked: true } : size
     )
@@ -146,8 +222,18 @@ function App() {
     "No Field",
     "No Field",
   ]);
-  const day1Order2Boxes = 5;
-  const [day1Order2Sizes, setDay1Order2Sizes] = useState(
+  const [day2Order2Fields, setDay2Order2Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
+  const [day3Order2Fields, setDay3Order2Fields] = useState([
+    "Field 1",
+    "No Field",
+    "No Field",
+  ]);
+  const order2Boxes = 5;
+  const [order2Sizes, setOrder2Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
       ["L1", "XL"].includes(size.name) ? { ...size, checked: true } : size
     )
@@ -158,29 +244,11 @@ function App() {
     "No Field",
     "No Field",
   ]);
-  const day1Order3Boxes = 7;
-  const [day1Order3Sizes, setDay1Order3Sizes] = useState(
+  const order3Boxes = 7;
+  const [order3Sizes, setOrder3Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
       ["M", "L2"].includes(size.name) ? { ...size, checked: true } : size
     )
-  );
-
-  const fields = useRef(
-    Array.from({ length: numFields }, () => {
-      // TODO: test data, replace will fetch from spreadsheet eventually
-      const length = Math.floor(Math.random() * 300 + 800);
-      return {
-        length,
-        potatoes: Array.from(
-          { length },
-          () => RoundToDecimal(Math.random() * 37 + 3, 2) // limits each potato to 2 decimal places
-        ),
-        potatoesTakenPerOrder: {
-          total: 0,
-          inOperation: [[0]],
-        },
-      };
-    })
   );
 
   // const days = 3;
@@ -204,12 +272,12 @@ function App() {
         })
         .filter((value) => value !== undefined),
       setFields: setDay1Order1Fields,
-      numberOfBoxes: day1Order1Boxes,
-      sizes: day1Order1Sizes
+      numberOfBoxes: order1Boxes,
+      sizes: order1Sizes
         .map((size, index) => (size.checked ? index : undefined))
         .filter((value) => value !== undefined),
-      allSizes: day1Order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
-      setSizes: setDay1Order1Sizes,
+      allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
+      setSizes: setOrder1Sizes,
       colour: "#81a5c3",
       colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
     },
@@ -223,12 +291,12 @@ function App() {
         })
         .filter((value) => value !== undefined),
       setFields: setDay1Order2Fields,
-      numberOfBoxes: day1Order2Boxes,
-      sizes: day1Order2Sizes
+      numberOfBoxes: order2Boxes,
+      sizes: order2Sizes
         .map((size, index) => (size.checked ? index : undefined))
         .filter((value) => value !== undefined),
-      allSizes: day1Order2Sizes,
-      setSizes: setDay1Order2Sizes,
+      allSizes: order2Sizes,
+      setSizes: setOrder2Sizes,
       colour: "#8f79aa",
       colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
     },
@@ -241,16 +309,92 @@ function App() {
           return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
         })
         .filter((value) => value !== undefined),
-      numberOfBoxes: day1Order3Boxes,
+      numberOfBoxes: order3Boxes,
       setFields: setDay1Order3Fields,
-      sizes: day1Order3Sizes
+      sizes: order3Sizes
         .map((size, index) => (size.checked ? index : undefined))
         .filter((value) => value !== undefined),
-      allSizes: day1Order3Sizes,
-      setSizes: setDay1Order3Sizes,
+      allSizes: order3Sizes,
+      setSizes: setOrder3Sizes,
       colour: "#c78dd0",
       colourScheme: d3.interpolateHsl("#a047ae", "#ead4ed"),
     },
+    // {
+    //   order: 1,
+    //   unmappedFields: day2Order1Fields,
+    //   fields: day2Order1Fields
+    //     .map((field) => {
+    //       const fieldNum = field.split(" ")[1];
+    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+    //     })
+    //     .filter((value) => value !== undefined),
+    //   setFields: setDay2Order1Fields,
+    //   numberOfBoxes: order1Boxes,
+    //   sizes: order1Sizes
+    //     .map((size, index) => (size.checked ? index : undefined))
+    //     .filter((value) => value !== undefined),
+    //   allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
+    //   setSizes: setOrder1Sizes,
+    //   colour: "#81a5c3",
+    //   colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
+    // },
+    // {
+    //   order: 2,
+    //   unmappedFields: day2Order2Fields,
+    //   fields: day2Order2Fields
+    //     .map((field) => {
+    //       const fieldNum = field.split(" ")[1];
+    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+    //     })
+    //     .filter((value) => value !== undefined),
+    //   setFields: setDay2Order2Fields,
+    //   numberOfBoxes: order2Boxes,
+    //   sizes: order2Sizes
+    //     .map((size, index) => (size.checked ? index : undefined))
+    //     .filter((value) => value !== undefined),
+    //   allSizes: order2Sizes,
+    //   setSizes: setOrder2Sizes,
+    //   colour: "#8f79aa",
+    //   colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
+    // },
+    // {
+    //   order: 1,
+    //   unmappedFields: day3Order1Fields,
+    //   fields: day3Order1Fields
+    //     .map((field) => {
+    //       const fieldNum = field.split(" ")[1];
+    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+    //     })
+    //     .filter((value) => value !== undefined),
+    //   setFields: setDay3Order1Fields,
+    //   numberOfBoxes: order1Boxes,
+    //   sizes: order1Sizes
+    //     .map((size, index) => (size.checked ? index : undefined))
+    //     .filter((value) => value !== undefined),
+    //   allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
+    //   setSizes: setOrder1Sizes,
+    //   colour: "#81a5c3",
+    //   colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
+    // },
+    // {
+    //   order: 2,
+    //   unmappedFields: day3Order2Fields,
+    //   fields: day3Order2Fields
+    //     .map((field) => {
+    //       const fieldNum = field.split(" ")[1];
+    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+    //     })
+    //     .filter((value) => value !== undefined),
+    //   setFields: setDay3Order2Fields,
+    //   numberOfBoxes: order2Boxes,
+    //   sizes: order2Sizes
+    //     .map((size, index) => (size.checked ? index : undefined))
+    //     .filter((value) => value !== undefined),
+    //   allSizes: order2Sizes,
+    //   setSizes: setOrder2Sizes,
+    //   colour: "#8f79aa",
+    //   colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
+    // },
   ];
 
   const pullFromStorage = true;
@@ -273,58 +417,72 @@ function App() {
   const revenuePerBox = 15;
 
   // reset potatoesTakenPerOrder
-  fields.current.map((field) => {
+  fields.map((field) => {
     field.potatoesTakenPerOrder = { total: 0, inOperation: [[0]] };
   });
 
   const boxOunces = 640; // 40lbs
 
-  const fieldMakeup = useRef<SeparatedField[]>(
-    fields.current.map((field) => {
-      const smalls = sizes.current[0];
-      const mediums = sizes.current[1];
-      const large1s = sizes.current[2];
-      const large2s = sizes.current[3];
-      const extraLarges = sizes.current[4];
-      const giants = sizes.current[5];
-      return {
-        S: field.potatoes.filter((potato) =>
-          isBetween(potato, smalls.lowerBound, smalls.upperBound)
-        ),
-        M: field.potatoes.filter((potato) =>
-          isBetween(potato, mediums.lowerBound, mediums.upperBound)
-        ),
-        L1: field.potatoes.filter((potato) =>
-          isBetween(potato, large1s.lowerBound, large1s.upperBound)
-        ),
-        L2: field.potatoes.filter((potato) =>
-          isBetween(potato, large2s.lowerBound, large2s.upperBound)
-        ),
-        XL: field.potatoes.filter((potato) =>
-          isBetween(potato, extraLarges.lowerBound, extraLarges.upperBound)
-        ),
-        G: field.potatoes.filter((potato) =>
-          isBetween(potato, giants.lowerBound, giants.upperBound)
-        ),
-      };
-    })
+  const generateFieldMakeup = useCallback(
+    () =>
+      fields.map((field) => {
+        const smalls = sizes.current[0];
+        const mediums = sizes.current[1];
+        const large1s = sizes.current[2];
+        const large2s = sizes.current[3];
+        const extraLarges = sizes.current[4];
+        const giants = sizes.current[5];
+        return {
+          S: field.potatoes.filter((potato) =>
+            isBetween(potato, smalls.lowerBound, smalls.upperBound)
+          ),
+          M: field.potatoes.filter((potato) =>
+            isBetween(potato, mediums.lowerBound, mediums.upperBound)
+          ),
+          L1: field.potatoes.filter((potato) =>
+            isBetween(potato, large1s.lowerBound, large1s.upperBound)
+          ),
+          L2: field.potatoes.filter((potato) =>
+            isBetween(potato, large2s.lowerBound, large2s.upperBound)
+          ),
+          XL: field.potatoes.filter((potato) =>
+            isBetween(potato, extraLarges.lowerBound, extraLarges.upperBound)
+          ),
+          G: field.potatoes.filter((potato) =>
+            isBetween(potato, giants.lowerBound, giants.upperBound)
+          ),
+        };
+      }),
+    [fields]
   );
 
-  // console.log(fields);
+  const fieldMakeup = useRef<SeparatedField[]>(generateFieldMakeup());
 
-  const orderDetails = orders.map((order, orderIndex) => {
-    const ouncesPacked = {
+  useEffect(() => {
+    fieldMakeup.current = generateFieldMakeup();
+  }, [generateFieldMakeup]);
+
+  // console.log(fields);
+  console.log("before storage", storage);
+
+  const orderDetails: OrderStatusObject[] = [];
+
+  for (let i = 0; i < orders.length; i++) {
+    const orderIndex = i;
+    const order = orders[i];
+
+    const ouncesPacked: OuncesPackedObject = {
       sum: 0,
-      operations: [0],
-      toStorage: [[[0]]],
-      toStorageFlattish: [[0]],
-      toBox: [[[0]]],
+      operations: [],
+      toStorage: [],
+      toBox: [],
     };
-    ouncesPacked.toStorage.pop();
-    ouncesPacked.toBox.pop();
-    const orderStatus = {
+
+    const orderStatus: OrderStatusObject = {
       ...order,
       ouncesPacked: ouncesPacked,
+      storedBoxes:
+        orderIndex > 0 ? orderDetails[orderIndex - 1].storedBoxes : [],
       isFulfilled: false,
       boxesPacked: 0,
       costs: {
@@ -336,30 +494,36 @@ function App() {
     let numFieldSwitches = 0;
 
     const ouncesOrdered = boxOunces * order.numberOfBoxes;
+    const preStoredBoxes =
+      orderIndex === 0
+        ? []
+        : orderDetails[orderIndex - 1].storedBoxes[orderIndex - 1];
 
     let size = orderStatus.sizes[orderStatus.sizes.length - 1];
     while (
       pullFromStorage &&
+      orderIndex > 0 &&
       !orderStatus.isFulfilled &&
       size >= orderStatus.sizes[0]
     ) {
       const difference = orderStatus.numberOfBoxes - orderStatus.boxesPacked;
-      const currentStorageBins = storage[sizes.current[size].classification];
+      const currentStorageBins = preStoredBoxes[size];
 
       orderStatus.boxesPacked +=
-        currentStorageBins[0] - difference < 0
-          ? currentStorageBins[0]
-          : difference;
+        currentStorageBins - difference < 0 ? currentStorageBins : difference;
 
-      currentStorageBins[0] = Math.max(0, currentStorageBins[0] - difference);
+      preStoredBoxes[size] = Math.max(0, currentStorageBins - difference);
       orderStatus.isFulfilled =
         orderStatus.boxesPacked >= orderStatus.numberOfBoxes;
+      orderStatus.ouncesPacked.sum = orderStatus.boxesPacked * boxOunces;
       size--;
     }
 
+    console.log("boxesPacked", orderStatus.boxesPacked);
+
     for (let i = 0; i < order.fields.length; i++) {
       // if (orderStatus.isFulfilled) break;
-      const currentField = fields.current[order.fields[i]];
+      const currentField = fields[order.fields[i]];
       const ouncesFromField = getMaxSum(
         currentField.potatoes.slice(
           orderIndex === 0 ? 0 : currentField.potatoesTakenPerOrder.total
@@ -369,16 +533,14 @@ function App() {
         sizes.current[order.sizes[0]].lowerBound
       );
 
-      fields.current[order.fields[i]].potatoesTakenPerOrder.inOperation[
-        orderIndex
-      ] = currentField.potatoes.slice(0, ouncesFromField.operations);
-      fields.current[order.fields[i]].potatoesTakenPerOrder.total =
-        fields.current[
-          order.fields[i]
-        ].potatoesTakenPerOrder.inOperation.reduce(
-          (acc, cur) => acc + cur.length,
-          0
-        );
+      fields[order.fields[i]].potatoesTakenPerOrder.inOperation[orderIndex] =
+        currentField.potatoes.slice(0, ouncesFromField.operations);
+      fields[order.fields[i]].potatoesTakenPerOrder.total = fields[
+        order.fields[i]
+      ].potatoesTakenPerOrder.inOperation.reduce(
+        (acc, cur) => acc + cur.length,
+        0
+      );
 
       numFieldSwitches =
         i +
@@ -390,14 +552,13 @@ function App() {
       ouncesPacked.operations[i] = ouncesFromField.operations;
       ouncesPacked.sum += ouncesFromField.sum;
       ouncesPacked.toStorage.push(ouncesFromField.toStorage);
-      ouncesPacked.toStorageFlattish = ouncesFromField.toStorage.map(
-        (size, sizeIndex) => [
-          ...size,
-          ...(ouncesPacked.toStorageFlattish[sizeIndex] || []),
-        ]
-      );
       ouncesPacked.toBox.push(ouncesFromField.toBox);
       orderStatus.ouncesPacked = ouncesPacked;
+      orderStatus.storedBoxes[orderIndex] = ouncesPacked.toStorage[0].map(
+        (size, sizeIndex) =>
+          Math.ceil(size.reduce((acc, cur) => acc + cur) / boxOunces) +
+          (preStoredBoxes[sizeIndex] || 0)
+      );
       orderStatus.isFulfilled = ouncesPacked.sum >= ouncesOrdered;
       orderStatus.boxesPacked = ouncesPacked.sum / boxOunces;
     }
@@ -414,27 +575,24 @@ function App() {
 
     orderStatus.costs = costs;
 
-    return orderStatus;
-  });
+    orderDetails[orderIndex] = orderStatus;
+  }
 
-  console.log("orderDetails", orderDetails);
+  // console.log("orderDetails", orderDetails);
 
   // move the toStorage stuff in each order to storage
-  sizeLabels.map((size, index) => {
-    orderDetails.forEach((order, orderIndex) => {
-      storage[size][orderIndex] = Math.ceil(
-        (order.ouncesPacked.toStorageFlattish[index] || [0]).reduce(
-          (acc, cur) => acc + cur
-        ) / boxOunces
-      );
-    });
-  });
+  // sizeLabels.map((size, index) => {
+  //   storage[size][orderIndex] = Math.ceil(
+  //     (orderStatus.ouncesPacked.toStorageFlattish[index] || [0]).reduce(
+  //       (acc, cur) => acc + cur
+  //     ) / boxOunces
+  //   );
+  // });
 
-  orderDetails.forEach((order, orderIndex) => {
+  orderDetails.forEach((order) => {
     order.costs.storageCost =
-      Object.values(storage)
-        .map((size) => size[orderIndex])
-        .reduce((acc, cur) => acc + cur) * storageCostPerBox;
+      order.storedBoxes.flat().reduce((acc, cur) => acc + cur) *
+      storageCostPerBox;
   });
 
   const totalCost = RoundToDecimal(
@@ -448,20 +606,27 @@ function App() {
       .reduce((acc, cur) => acc + cur),
     2
   );
+
+  console.log("orderDetails", orderDetails);
   const totalRevenue = RoundToDecimal(
     orderDetails
-      .map(
-        (order) =>
-          clamp(Math.ceil(order.boxesPacked), 0, order.numberOfBoxes) *
-          revenuePerBox
-      )
+      .map((order) => {
+        const numBoxes = clamp(
+          Math.ceil(order.boxesPacked),
+          0,
+          order.numberOfBoxes
+        );
+        return numBoxes === order.numberOfBoxes ? numBoxes * revenuePerBox : 0;
+      })
       .reduce((acc, cur) => acc + cur, 0),
     2
   );
+  console.log("totalRevenue", totalRevenue);
+  console.log("totalCost", totalCost);
 
   return (
     <Xwrapper>
-      <div style={{ /*width: 1920, */ height: 1080, fontFamily: "sans-serif" }}>
+      <div style={{ fontFamily: "sans-serif" }}>
         <div style={{ display: "flex", gridAutoFlow: "column" }}>
           <Draggable
             defaultPosition={getDefaultPos("orders")}
@@ -575,7 +740,7 @@ function App() {
                         ...potatoesTaken,
                       ],
                     }}
-                    maxY={400}
+                    maxY={700}
                   />
                 );
               })}
@@ -593,7 +758,11 @@ function App() {
             }}
           >
             <fieldset
-              style={{ display: "grid", width: "fit-content" }}
+              style={{
+                display: "grid",
+                width: "fit-content",
+                height: "fit-content",
+              }}
               id="boxesPacked"
             >
               <legend>Boxes Packed Per Order</legend>
@@ -628,22 +797,26 @@ function App() {
                 id="storage"
               >
                 <legend>Storage</legend>
-                <StackedBarplot
-                  width={200}
-                  height={200}
-                  data={{
-                    title: "Stored Boxes",
-                    xAxisLabels: sizeLabels,
-                    components: orderDetails.map((order, orderIndex) => ({
-                      title: `Order ${orderIndex + 1}`,
-                      values: sizeLabels.map(
-                        (size) => storage[size][orderIndex] || 0
-                      ),
-                      color: order.colour,
-                    })),
-                  }}
-                  maxY={60}
-                />
+                {orderDetails
+                  .slice(-1)[0]
+                  .storedBoxes.map((orderBoxes, index) => (
+                    <StackedBarplot
+                      width={200}
+                      height={200}
+                      data={{
+                        title: `Order ${index + 1}`,
+                        xAxisLabels: sizeLabels,
+                        components: [
+                          {
+                            title: `Order ${index + 1}`,
+                            values: orderBoxes,
+                            color: orders[index].colour,
+                          },
+                        ],
+                      }}
+                      maxY={20}
+                    />
+                  ))}
               </fieldset>
             </Draggable>
 
@@ -698,6 +871,7 @@ function App() {
                       ],
                     }}
                     maxY={totalRevenue + totalRevenue / 10}
+                    stepHeight={100}
                   />
                 </fieldset>
               </Draggable>

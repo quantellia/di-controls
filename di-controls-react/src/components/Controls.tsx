@@ -298,7 +298,7 @@ function Dial({
       .append("circle")
       .attr("cy", -innerRadius * Math.cos(currentAngle))
       .attr("cx", innerRadius * Math.sin(currentAngle))
-      .attr("r", radius / 25)
+      .attr("r", radius / 20)
       .attr(
         "fill",
         color(
