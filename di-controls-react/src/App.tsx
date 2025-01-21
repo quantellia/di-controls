@@ -17,6 +17,7 @@ interface SeparatedField {
 }
 
 interface OrderObject {
+  day: number;
   order: number;
   unmappedFields: string[];
   fields: number[];
@@ -119,6 +120,7 @@ const getMaxSum = (
 
 function App() {
   const [fieldsArray, setFieldsArray] = useState<number[][]>([[]]);
+  const boxesPackedPerOrder = useRef([0, 0, 0]);
 
   const fields = fieldsArray.map((field) => ({
     length: field.length,
@@ -263,6 +265,7 @@ function App() {
 
   const orders = [
     {
+      day: 1,
       order: 1,
       unmappedFields: day1Order1Fields,
       fields: day1Order1Fields
@@ -282,6 +285,7 @@ function App() {
       colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
     },
     {
+      day: 1,
       order: 2,
       unmappedFields: day1Order2Fields,
       fields: day1Order2Fields
@@ -301,6 +305,7 @@ function App() {
       colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
     },
     {
+      day: 1,
       order: 3,
       unmappedFields: day1Order3Fields,
       fields: day1Order3Fields
@@ -319,82 +324,86 @@ function App() {
       colour: "#c78dd0",
       colourScheme: d3.interpolateHsl("#a047ae", "#ead4ed"),
     },
-    // {
-    //   order: 1,
-    //   unmappedFields: day2Order1Fields,
-    //   fields: day2Order1Fields
-    //     .map((field) => {
-    //       const fieldNum = field.split(" ")[1];
-    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
-    //     })
-    //     .filter((value) => value !== undefined),
-    //   setFields: setDay2Order1Fields,
-    //   numberOfBoxes: order1Boxes,
-    //   sizes: order1Sizes
-    //     .map((size, index) => (size.checked ? index : undefined))
-    //     .filter((value) => value !== undefined),
-    //   allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
-    //   setSizes: setOrder1Sizes,
-    //   colour: "#81a5c3",
-    //   colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
-    // },
-    // {
-    //   order: 2,
-    //   unmappedFields: day2Order2Fields,
-    //   fields: day2Order2Fields
-    //     .map((field) => {
-    //       const fieldNum = field.split(" ")[1];
-    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
-    //     })
-    //     .filter((value) => value !== undefined),
-    //   setFields: setDay2Order2Fields,
-    //   numberOfBoxes: order2Boxes,
-    //   sizes: order2Sizes
-    //     .map((size, index) => (size.checked ? index : undefined))
-    //     .filter((value) => value !== undefined),
-    //   allSizes: order2Sizes,
-    //   setSizes: setOrder2Sizes,
-    //   colour: "#8f79aa",
-    //   colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
-    // },
-    // {
-    //   order: 1,
-    //   unmappedFields: day3Order1Fields,
-    //   fields: day3Order1Fields
-    //     .map((field) => {
-    //       const fieldNum = field.split(" ")[1];
-    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
-    //     })
-    //     .filter((value) => value !== undefined),
-    //   setFields: setDay3Order1Fields,
-    //   numberOfBoxes: order1Boxes,
-    //   sizes: order1Sizes
-    //     .map((size, index) => (size.checked ? index : undefined))
-    //     .filter((value) => value !== undefined),
-    //   allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
-    //   setSizes: setOrder1Sizes,
-    //   colour: "#81a5c3",
-    //   colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
-    // },
-    // {
-    //   order: 2,
-    //   unmappedFields: day3Order2Fields,
-    //   fields: day3Order2Fields
-    //     .map((field) => {
-    //       const fieldNum = field.split(" ")[1];
-    //       return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
-    //     })
-    //     .filter((value) => value !== undefined),
-    //   setFields: setDay3Order2Fields,
-    //   numberOfBoxes: order2Boxes,
-    //   sizes: order2Sizes
-    //     .map((size, index) => (size.checked ? index : undefined))
-    //     .filter((value) => value !== undefined),
-    //   allSizes: order2Sizes,
-    //   setSizes: setOrder2Sizes,
-    //   colour: "#8f79aa",
-    //   colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
-    // },
+    {
+      day: 2,
+      order: 1,
+      unmappedFields: day2Order1Fields,
+      fields: day2Order1Fields
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
+        .filter((value) => value !== undefined),
+      setFields: setDay2Order1Fields,
+      numberOfBoxes: order1Boxes,
+      sizes: order1Sizes
+        .map((size, index) => (size.checked ? index : undefined))
+        .filter((value) => value !== undefined),
+      allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
+      setSizes: setOrder1Sizes,
+      colour: "#81a5c3",
+      colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
+    },
+    {
+      day: 2,
+      order: 2,
+      unmappedFields: day2Order2Fields,
+      fields: day2Order2Fields
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
+        .filter((value) => value !== undefined),
+      setFields: setDay2Order2Fields,
+      numberOfBoxes: order2Boxes,
+      sizes: order2Sizes
+        .map((size, index) => (size.checked ? index : undefined))
+        .filter((value) => value !== undefined),
+      allSizes: order2Sizes,
+      setSizes: setOrder2Sizes,
+      colour: "#8f79aa",
+      colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
+    },
+    {
+      day: 3,
+      order: 1,
+      unmappedFields: day3Order1Fields,
+      fields: day3Order1Fields
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
+        .filter((value) => value !== undefined),
+      setFields: setDay3Order1Fields,
+      numberOfBoxes: order1Boxes,
+      sizes: order1Sizes
+        .map((size, index) => (size.checked ? index : undefined))
+        .filter((value) => value !== undefined),
+      allSizes: order1Sizes, // TODO: find a way to merge this into the 'sizes' attribute for all orders
+      setSizes: setOrder1Sizes,
+      colour: "#81a5c3",
+      colourScheme: d3.interpolateHsl("#426a8a", "#bacede"),
+    },
+    {
+      day: 3,
+      order: 2,
+      unmappedFields: day3Order2Fields,
+      fields: day3Order2Fields
+        .map((field) => {
+          const fieldNum = field.split(" ")[1];
+          return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
+        })
+        .filter((value) => value !== undefined),
+      setFields: setDay3Order2Fields,
+      numberOfBoxes: order2Boxes,
+      sizes: order2Sizes
+        .map((size, index) => (size.checked ? index : undefined))
+        .filter((value) => value !== undefined),
+      allSizes: order2Sizes,
+      setSizes: setOrder2Sizes,
+      colour: "#8f79aa",
+      colourScheme: d3.interpolateHsl("#5c4a73", "#c3b7d1"),
+    },
   ];
 
   const pullFromStorage = true;
@@ -483,8 +492,12 @@ function App() {
       ouncesPacked: ouncesPacked,
       storedBoxes:
         orderIndex > 0 ? orderDetails[orderIndex - 1].storedBoxes : [],
-      isFulfilled: false,
-      boxesPacked: 0,
+      isFulfilled:
+        order.day > 1
+          ? boxesPackedPerOrder.current[order.order - 1] >= order.numberOfBoxes
+          : false,
+      boxesPacked:
+        order.day > 1 ? boxesPackedPerOrder.current[order.order - 1] : 0,
       costs: {
         fieldSwitchingCost: 0,
         storageCost: 0,
@@ -525,9 +538,11 @@ function App() {
       // if (orderStatus.isFulfilled) break;
       const currentField = fields[order.fields[i]];
       const ouncesFromField = getMaxSum(
-        currentField.potatoes.slice(
-          orderIndex === 0 ? 0 : currentField.potatoesTakenPerOrder.total
-        ),
+        orderStatus.isFulfilled
+          ? []
+          : currentField.potatoes.slice(
+              orderIndex === 0 ? 0 : currentField.potatoesTakenPerOrder.total
+            ),
         ouncesOrdered - ouncesPacked.sum,
         sizes.current[order.sizes[order.sizes.length - 1]].upperBound,
         sizes.current[order.sizes[0]].lowerBound
@@ -559,8 +574,11 @@ function App() {
           Math.ceil(size.reduce((acc, cur) => acc + cur) / boxOunces) +
           (preStoredBoxes[sizeIndex] || 0)
       );
-      orderStatus.isFulfilled = ouncesPacked.sum >= ouncesOrdered;
-      orderStatus.boxesPacked = ouncesPacked.sum / boxOunces;
+      orderStatus.isFulfilled =
+        orderStatus.isFulfilled || ouncesPacked.sum >= ouncesOrdered;
+      orderStatus.boxesPacked = orderStatus.isFulfilled
+        ? order.numberOfBoxes
+        : ouncesPacked.sum / boxOunces;
     }
 
     const costs = {
@@ -568,31 +586,36 @@ function App() {
       storageCost: 0,
       wagesCost:
         ((numFieldSwitches * minutesSpentToSwitchFields +
-          (orderStatus.ouncesPacked.sum / 16) * packMinutesPerPound) /
+          Math.max(
+            orderStatus.ouncesPacked.sum / 16 -
+              (order.day > 1
+                ? boxesPackedPerOrder.current[order.order - 1] * 40
+                : 0),
+            0
+          ) *
+            packMinutesPerPound) /
           60) *
         hourlyWorkRate,
     };
+
+    boxesPackedPerOrder.current[order.order - 1] = orderStatus.boxesPacked;
 
     orderStatus.costs = costs;
 
     orderDetails[orderIndex] = orderStatus;
   }
 
-  // console.log("orderDetails", orderDetails);
-
-  // move the toStorage stuff in each order to storage
-  // sizeLabels.map((size, index) => {
-  //   storage[size][orderIndex] = Math.ceil(
-  //     (orderStatus.ouncesPacked.toStorageFlattish[index] || [0]).reduce(
-  //       (acc, cur) => acc + cur
-  //     ) / boxOunces
-  //   );
-  // });
-
-  orderDetails.forEach((order) => {
+  orderDetails.forEach((order, index) => {
     order.costs.storageCost =
-      order.storedBoxes.flat().reduce((acc, cur) => acc + cur) *
-      storageCostPerBox;
+      Math.max(
+        order.storedBoxes.flat().reduce((acc, cur) => acc + cur) -
+          (index > 0
+            ? orderDetails[index - 1].storedBoxes
+                .flat()
+                .reduce((acc, cur) => acc + cur)
+            : 0),
+        0
+      ) * storageCostPerBox;
   });
 
   const totalCost = RoundToDecimal(
@@ -609,14 +632,16 @@ function App() {
 
   console.log("orderDetails", orderDetails);
   const totalRevenue = RoundToDecimal(
-    orderDetails
-      .map((order) => {
+    boxesPackedPerOrder.current
+      .map((boxes, index) => {
         const numBoxes = clamp(
-          Math.ceil(order.boxesPacked),
+          Math.ceil(boxes),
           0,
-          order.numberOfBoxes
+          orderDetails[index].numberOfBoxes
         );
-        return numBoxes === order.numberOfBoxes ? numBoxes * revenuePerBox : 0;
+        return numBoxes === orderDetails[index].numberOfBoxes
+          ? numBoxes * revenuePerBox
+          : 0;
       })
       .reduce((acc, cur) => acc + cur, 0),
     2
@@ -641,7 +666,7 @@ function App() {
               {orders.map((order, index) => {
                 return (
                   <fieldset style={{ display: "flex" }}>
-                    <legend>{`Order ${index + 1}`}</legend>
+                    <legend>{`Day ${order.day}, Order ${order.order}`}</legend>
                     {order.unmappedFields.map((field, fieldIndex) => (
                       <Dial
                         currentValue={field}
@@ -659,7 +684,7 @@ function App() {
                       />
                     ))}
                     <CheckBoxGroup
-                      title={`Order ${index + 1} Size`}
+                      title={`Day ${order.day}, Order ${order.order} Size`}
                       currentValue={order.allSizes}
                       // setCurrentValue={order.setSizes}
                       key={`${index}-checkboxgrouporder`}
@@ -766,15 +791,15 @@ function App() {
               id="boxesPacked"
             >
               <legend>Boxes Packed Per Order</legend>
-              {orderDetails.map((order, index) => (
+              {boxesPackedPerOrder.current.map((boxes, index) => (
                 <Gauge
                   title={`Order ${index + 1}`}
                   min={0}
-                  max={order.numberOfBoxes}
+                  max={orderDetails[index].numberOfBoxes}
                   currentValue={clamp(
-                    Math.ceil(order.boxesPacked),
+                    Math.ceil(boxes),
                     0,
-                    order.numberOfBoxes
+                    orderDetails[index].numberOfBoxes
                   )}
                   radius={200}
                   d3ColorScheme={d3.interpolateHsl("#b56d77", "#95d491")}
@@ -804,11 +829,11 @@ function App() {
                       width={200}
                       height={200}
                       data={{
-                        title: `Order ${index + 1}`,
+                        title: `Day ${orders[index].day}, Order ${orders[index].order}`,
                         xAxisLabels: sizeLabels,
                         components: [
                           {
-                            title: `Order ${index + 1}`,
+                            title: `Day ${orders[index].day}, Order ${orders[index].order}`,
                             values: orderBoxes,
                             color: orders[index].colour,
                           },
@@ -863,7 +888,9 @@ function App() {
                         {
                           title: "Profit",
                           values: [
-                            ...Array(orders.length).fill(0),
+                            ...Array(boxesPackedPerOrder.current.length).fill(
+                              0
+                            ),
                             RoundToDecimal(totalRevenue - totalCost, 2),
                           ],
                           color: "#95d491",
