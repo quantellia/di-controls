@@ -63,10 +63,13 @@ const sizeBounds = [3, 5.3, 10.6, 15.9, 21.2, 28.2, 40];
 const sizeLabels = ["S", "M", "L1", "L2", "XL", "G"];
 const semanticCounting = ["First", "Second", "Third"];
 
+
+//Helper functions
 function isBetween(value: number, lowerBound: number, upperBound: number) {
   return lowerBound <= value && value < upperBound;
 }
 
+//Used when we load the spreadsheet data
 function addToField(field: number[][], potato: number) {
   for (let i = 0; i < sizeBounds.length; i++) {
     if (potato < sizeBounds[i]) {
@@ -106,8 +109,8 @@ const getMaxSum = (
     lowerBound < num && num < upperBound
       ? addToSumAndBox(num)
       : addToField(toStorage, num);
-    operations++;
-    if (sum > max) break;
+    operations++; //Used for graph telemetry
+    if (sum > max) break; //Order satisfied, stop packing
   }
   return {
     sum,
@@ -117,6 +120,11 @@ const getMaxSum = (
   };
 };
 // end theft
+
+
+// -----
+// REACT STUFF STARTS HERE
+// -----
 
 function App() {
   const [fieldsArray, setFieldsArray] = useState<number[][]>([[]]);
@@ -158,10 +166,13 @@ function App() {
         .map((line) => parseFloat(line.split("\t")[1]))
         .filter((num) => !Number.isNaN(num));
     });
-    setFieldsArray(generatedArr);
+    setFieldsArray(generatedArr); //This is a useState
   }, []);
 
   const updateXarrow = useXarrow();
+
+
+  //Store positions for per-session persistence
   const serializePosition = (key: string) => {
     localStorage.setItem(
       key,
@@ -175,6 +186,7 @@ function App() {
         .replace(")", "")
     );
   };
+  //Load stored positions
   const getDefaultPos = (key: string) => {
     const posString = localStorage.getItem(key);
 
@@ -186,17 +198,22 @@ function App() {
     return { x: x, y: y };
   };
 
+
+
+  //Used in the dials. Defines an array of selectable field values
   const numFields = 10;
   const fieldSelectionArray = Array.from(
     { length: numFields + 1 },
     (_, field) => (field === numFields ? "No Field" : `Field ${field + 1}`)
   );
 
+  //Checkboxes
   const sizeCheckboxesObject = sizeLabels.map((label) => ({
     name: label,
     checked: false,
   }));
 
+  //Dials
   const [day1Order1Fields, setDay1Order1Fields] = useState([
     "Field 1",
     "No Field",
@@ -212,6 +229,8 @@ function App() {
     "No Field",
     "No Field",
   ]);
+  
+  //Define number of boxes for the first order
   const order1Boxes = 5;
   const [order1Sizes, setOrder1Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
@@ -234,6 +253,8 @@ function App() {
     "No Field",
     "No Field",
   ]);
+
+  //Order 2
   const order2Boxes = 5;
   const [order2Sizes, setOrder2Sizes] = useState(
     sizeCheckboxesObject.map((size) =>
@@ -253,7 +274,7 @@ function App() {
     )
   );
 
-  // const days = 3;
+
 
   const sizes = useRef(
     sizeLabels.map((value, index) => ({
@@ -263,12 +284,16 @@ function App() {
     }))
   );
 
+  // -----
+  // "The main meat of where everything comes from"
+  // -----
+
   const orders = [
     {
       day: 1,
       order: 1,
       unmappedFields: day1Order1Fields,
-      fields: day1Order1Fields
+      fields: day1Order1Fields  //List of fields that we've selected on the dials (mapped and filtered by the dial I think)
         .map((field) => {
           const fieldNum = field.split(" ")[1];
           return fieldNum !== "Field" ? parseInt(fieldNum) - 1 : undefined;
@@ -406,9 +431,16 @@ function App() {
     },
   ];
 
+  //-----
+  // Simpler consts here
+  // -----
+
+  //Simple flag
   const pullFromStorage = true;
+
   const storage: SeparatedField = {
     // these numbers are the number of boxes, not the number of potatoes.  We just use the same data structure since it's easier
+    // If S: [1, 3, 2] After order 1 there was 1 box, after order 2 there were 3 boxes
     S: [0],
     M: [0],
     L1: [0],
@@ -432,6 +464,8 @@ function App() {
 
   const boxOunces = 640; // 40lbs
 
+  // Categorizes a random field
+  // Iterates through the field and sorts the values into categories, preserving original order
   const generateFieldMakeup = useCallback(
     () =>
       fields.map((field) => {
@@ -462,9 +496,10 @@ function App() {
           ),
         };
       }),
-    [fields]
+    [fields] //Only call when fields updates
   );
 
+  //Only do the above function once in a useref on page load
   const fieldMakeup = useRef<SeparatedField[]>(generateFieldMakeup());
 
   useEffect(() => {
@@ -474,6 +509,8 @@ function App() {
   // console.log(fields);
   console.log("before storage", storage);
 
+  // This will contain info about each order, including the initial order object and the results of packing that order
+  // with the current decision parameters
   const orderDetails: OrderStatusObject[] = [];
 
   for (let i = 0; i < orders.length; i++) {
@@ -487,11 +524,12 @@ function App() {
       toBox: [],
     };
 
+    //Initialize it
     const orderStatus: OrderStatusObject = {
       ...order,
       ouncesPacked: ouncesPacked,
       storedBoxes:
-        orderIndex > 0 ? orderDetails[orderIndex - 1].storedBoxes : [],
+        orderIndex > 0 ? orderDetails[orderIndex - 1].storedBoxes : [], //Beyond the first order, grab this info from the previous order
       isFulfilled:
         order.day > 1
           ? boxesPackedPerOrder.current[order.order - 1] >= order.numberOfBoxes
@@ -512,6 +550,7 @@ function App() {
         ? []
         : orderDetails[orderIndex - 1].storedBoxes[orderIndex - 1];
 
+    //Storage
     let size = orderStatus.sizes[orderStatus.sizes.length - 1];
     while (
       pullFromStorage &&
@@ -519,6 +558,7 @@ function App() {
       !orderStatus.isFulfilled &&
       size >= orderStatus.sizes[0]
     ) {
+      //Grab from storage
       const difference = orderStatus.numberOfBoxes - orderStatus.boxesPacked;
       const currentStorageBins = preStoredBoxes[size];
 
@@ -534,9 +574,11 @@ function App() {
 
     console.log("boxesPacked", orderStatus.boxesPacked);
 
+    //Fields
     for (let i = 0; i < order.fields.length; i++) {
       // if (orderStatus.isFulfilled) break;
       const currentField = fields[order.fields[i]];
+      //Grab from fields
       const ouncesFromField = getMaxSum(
         orderStatus.isFulfilled
           ? []
@@ -564,11 +606,13 @@ function App() {
           ? 1
           : 0);
 
+      //At least some of this is only needed for rendering
       ouncesPacked.operations[i] = ouncesFromField.operations;
       ouncesPacked.sum += ouncesFromField.sum;
       ouncesPacked.toStorage.push(ouncesFromField.toStorage);
       ouncesPacked.toBox.push(ouncesFromField.toBox);
       orderStatus.ouncesPacked = ouncesPacked;
+      //Got a little hairy with toStorage, this is the value most recently uesd
       orderStatus.storedBoxes[orderIndex] = ouncesPacked.toStorage[0].map(
         (size, sizeIndex) =>
           Math.ceil(size.reduce((acc, cur) => acc + cur) / boxOunces) +
@@ -576,6 +620,7 @@ function App() {
       );
       orderStatus.isFulfilled =
         orderStatus.isFulfilled || ouncesPacked.sum >= ouncesOrdered;
+      //This is done for weird graphical issues, error correction
       orderStatus.boxesPacked = orderStatus.isFulfilled
         ? order.numberOfBoxes
         : ouncesPacked.sum / boxOunces;
@@ -583,7 +628,7 @@ function App() {
 
     const costs = {
       fieldSwitchingCost: numFieldSwitches * switchFieldCost,
-      storageCost: 0,
+      storageCost: 0, //Calculated later
       wagesCost:
         ((numFieldSwitches * minutesSpentToSwitchFields +
           Math.max(
@@ -602,9 +647,11 @@ function App() {
 
     orderStatus.costs = costs;
 
+    //Add this order's status to the overall array
     orderDetails[orderIndex] = orderStatus;
   }
 
+  //Start filling out storage costs
   orderDetails.forEach((order, index) => {
     order.costs.storageCost =
       Math.max(
@@ -649,6 +696,11 @@ function App() {
   console.log("totalRevenue", totalRevenue);
   console.log("totalCost", totalCost);
 
+
+  // -----
+  // RENDERING STARTS HERE
+  // -----
+
   return (
     <Xwrapper>
       <div style={{ fontFamily: "sans-serif" }}>
@@ -661,6 +713,7 @@ function App() {
               serializePosition("orders");
             }}
           >
+
             <fieldset style={{ display: "grid" }} id="orders">
               <legend>Orders</legend>
               {orders.map((order, index) => {
@@ -693,6 +746,7 @@ function App() {
                 );
               })}
             </fieldset>
+            
           </Draggable>
 
           <Draggable
