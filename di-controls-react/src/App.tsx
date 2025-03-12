@@ -1,10 +1,11 @@
-import { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import graphData from "./schema_compliant_cdd.json" assert {type: "json"};
+import { useCallback, useState, useMemo } from "react";
+import graphData from "./schema_compliant_cdd_multistep_adder.json" assert {type: "json"};
 import Draggable from "react-draggable";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
 import Slider from "./components/Slider";
 
-
+// Note: This code is included in graphData, as a base64 encoded string.
+// 
 // function CodeForAdd() {
 //   (function () {
 //     const add = function (vals) {
@@ -19,71 +20,183 @@ import Slider from "./components/Slider";
 //   })();
 // }
 
+// 
+//    ====IMPORTANT README====
+// 
+// To import another script, it must use a similar structure to the adder code above. It should take the form of
+// an immediately invoked function expression: https://developer.mozilla.org/en-US/docs/Glossary/IIFE where the
+// function returns a function map called funcMap.
+// 
+// funcMap should have string keys and function values. String keys will be used by Evaluatable Elements
+// to pass inputs to and receive outputs from the functions.
+// 
+// Example:
+// 
+// 
+// (function () {
+//   const myScriptFunction = function (inputs) {
+//     console.log(inputs);
+//     return [null];
+//   };
+// 
+//   return { funcMap: {"myScriptFunction": myScriptFunction} };
+// })();
+// 
+// Note: inputs must be an array of values. Here the input array is printed to console.
+// Note: defined functions must return outputs as an array of values. Here the output is an array with a single null value.
+// 
+
 function App() {
-  //Evaluatable Assets: Import modules from their Base64-encoded string values
+
+  //Evaluatable Assets: Import functions from their Base64-encoded string values
   let functionMap = new Map(); //"<ScriptUUID>_<FunctionName>": function
   graphData.evaluatableAssets.forEach((evalAsset) => {
     if(evalAsset.evalType == "Script" && evalAsset.content.language == "javascript")
     {
       const scriptString = atob(evalAsset.content.script);
-      // console.log("Script: ", scriptString);
+      //scriptCode returns a function map with function names as keys and function code as values
       const scriptCode = eval(scriptString);
 
       const thisScriptFunctionMap = scriptCode.funcMap;
       Object.keys(thisScriptFunctionMap).forEach((funcName) => {
-        functionMap.set(evalAsset.meta.uuid + "_" + funcName, thisScriptFunctionMap[funcName])
+        functionMap.set(`${evalAsset.meta.uuid}_${funcName}`, thisScriptFunctionMap[funcName])
       })
     }
   })
 
-  let IOValues = new Map();
-  graphData.inputOutputValues.forEach((ioVal) => {
-    IOValues.set(ioVal.meta.uuid, ioVal.data);
+  //I/O Values
+  const [IOValues, setIOValues] = useState(() => {
+    //Generate initial map of IO Values, stored in IOValues.
+    let initialIOValues = new Map();
+    graphData.inputOutputValues.forEach((ioVal) => {
+      initialIOValues.set(ioVal.meta.uuid, ioVal.data);
+    });
+    return initialIOValues;
   })
 
-  // console.log("function map", functionMap);
+  // 
+  //  ====MAIN MODEL EVALUATION FUNCTION====
+  //
+  const evaluateModel = useCallback((funcMap = functionMap, ioMap = IOValues, data = graphData, evalModelNumber = 0) => {
+    console.log("Eval start.");
 
-  const evaluateModel = function (funcMap = functionMap, ioMap = IOValues, data = graphData, evalModelNumber = 0) {
-    let evals = new Map();
+
+    // Model pre-processing
+    
+    let evals = new Map(); //Key: "Evaluatable Element UUID" -- Value: Evaluatable Element
+    let unevaluated = new Array<string>(); //Lists UUIDs for Eval Elements that haven't been evaluated yet
+    let outputValues = new Set<string>(); //Lists UUIDs for IO Vals that are referenced in Eval Elements as Outputs
+    //Populate the above empties
     data.evaluatables[evalModelNumber].elements.forEach((elem) => {
       evals.set(elem.meta.uuid, elem);
-    })
+      unevaluated.push(elem.meta.uuid); //All elements start as unevaluated
 
-    // console.log("Evaluatables", evals);
+      elem.outputs.forEach((IOValUUID: string) => {
+        //Since execution order is not guaranteed, an IO value used as an output for more than one
+        //eval element has a non-deterministic value when used as an input elsewhere
+        if(outputValues.has(IOValUUID))
+        {
+          console.error(`Error: Possible non-deterministic behavior from output ${IOValUUID} (Used as output multiple times. Execution order is not guaranteed.)`);
+        }
+        else
+        {
+          outputValues.add(IOValUUID)
+        }
+      });
+    });
+
+    //The set of I/O Values that have known values for this evaluation run.
+    //To start, assume that every I/O value that is never referenced as an Output has a known value.
+    //These will be our initial inputs.
+    let knownIOValues = new Set<string>(Array.from(ioMap.keys()).filter((IOValUUID: string) => !outputValues.has(IOValUUID)))
+
+    //Make a copy of our I/O Map. This function will return the new map as output.
+    //This is so we don't mutate the original I/O Map and make React upset.
+    let newIOValues = new Map(ioMap);
+
+    //Evaluation will continue until we either run out of unevaluated elements
+    //OR we fail to remove any elements from the unevaluated list in an iteration
+    let evalInProgress = unevaluated.length > 0;
+    let prevUnevalLength = -1;
+
+
+    // Main Eval loop
+
+    while(evalInProgress)
+    {
+      console.log("Step started. To eval: ", unevaluated);
+
+      //Try to evaluate unevaluated elements. If successful, remove them from unevaluated list.
+      let toRemoveFromUnevaluated = new Set<string>();
+      unevaluated.forEach((uuid: string) => {
+        const evalElem = evals.get(uuid);
+        const evalInputs = evalElem.inputs.map((uuid: String) => newIOValues.get(uuid));
+
+        //This element can be evaluated if we have a known value for all of its requested inputs
+        const isReadyToEval = evalElem.inputs.every((inputUUID: string) => knownIOValues.has(inputUUID));
+        if(isReadyToEval)
+        {
+          console.log("Evaluating ", uuid, " - Populated IO Values: ", knownIOValues);
+
+          //Get the function from our function map and run it to get our new outputs
+          const evalFunction = funcMap.get(`${evalElem.evaluatableAsset}_${evalElem.functionName}`) ?? (() => {return []})
+          const evaluatedOutputs = evalFunction(evalInputs)
     
-    //Execute entry points
-    data.evaluatables[evalModelNumber].entryPoints.forEach((uuid) => {
-      const evalElem = evals.get(uuid);
-      const evalInputs = evalElem.inputs.map((uuid: String) => {
-        return ioMap.get(uuid);
-      })
-      const evalFunction = funcMap.get("" + evalElem.evaluatableAsset + "_" + evalElem.functionName) ?? (() => {return []})
-      // console.log("" + evalElem.evaluatableAsset + "_" + evalElem.functionName);
-      // console.log("Eval Function: ", evalFunction);
-      const evaluatedOutputs = evalFunction(evalInputs)
+          //Function outputs are assumed to be given in the same order as they're listed in the eval element
+          for(let i = 0; i < evalElem.outputs.length && i < evaluatedOutputs.length; i++) {
+            newIOValues.set(evalElem.outputs[i], evaluatedOutputs[i]);
+            knownIOValues.add(evalElem.outputs[i]);
+          }
 
-      for(let i = 0; i < evalElem.outputs.length && i < evaluatedOutputs.length; i++) {
-        ioMap.set(evalElem.outputs[i], evaluatedOutputs[i]);
+          //Right now there's no validation step to confirm that an element evaluated successfully.
+          //It's just assumed successful after we load and run the function.
+          toRemoveFromUnevaluated.add(uuid);
+        }
+      })
+
+      unevaluated = unevaluated.filter((unevalUUID: string) => !toRemoveFromUnevaluated.has(unevalUUID)); //Remove the elements that we evaluated this iteration
+
+      console.log("Step complete. Evaluated: ", toRemoveFromUnevaluated);
+
+      //Determine whether we need another eval iteration
+      evalInProgress = unevaluated.length > 0;
+      if(unevaluated.length == prevUnevalLength) {
+        console.error("List of unevaluated elements has not changed between evaluation iterations. Terminating evaluation.");
+        evalInProgress = false;
       }
-    })
-  }
-  evaluateModel();
+      prevUnevalLength = unevaluated.length;
+    }
+    console.log("Eval Complete! IO Values: ", newIOValues);
+
+    return newIOValues;
+    
+  }, []);
+
+  const computedIOValues = useMemo(() => {
+    return evaluateModel(functionMap, IOValues, graphData);
+  }, [IOValues, functionMap, graphData]);
+
   // console.log("IO Values", IOValues);
 
   //Maps diagram element UUIDs to their list of associated I/O values. Associated via their control.
-  //One issue here is the case where multiple separate controls are associated with the same diagram element.
-  //This map's values should later take the form of a unique set, where the inner foreach loop adds to that set if it already exists.
-  let controlsMap = new Map(); //"<DiaElemUUID>": ["<IOValueUUID>", ... "<IOValueUUID>"]
+  let controlsMap = new Map<string, Array<string>>(); //"<DiaElemUUID>": ["<IOValueUUID>", ... "<IOValueUUID>"]
   graphData.controls.forEach((control) => {
     control.diagramElements.forEach((controlledDiagramElementUUID) => {
-      controlsMap.set(controlledDiagramElementUUID, control.inputOutputValues);
+      if(controlsMap.get(controlledDiagramElementUUID) !== undefined)
+      {
+        console.error(
+          `Error: Multiple Control elements found for Diagram Element ${controlledDiagramElementUUID}.`,
+          `Engine will only use the first control processed for this element. Ignoring control: `,
+          control,
+          ` - This element has these associated I/O values: `,
+          controlsMap.get(controlledDiagramElementUUID)
+        )
+      }
+      else
+      {
+        controlsMap.set(controlledDiagramElementUUID, control.inputOutputValues);
+      }
     })
-  })
-
-  //I/O Values
-  let inputOutputValues = new Map(); //"<IOValueUUID>": <value>
-  graphData.inputOutputValues.forEach((ioVal) => {
-    inputOutputValues.set(ioVal.meta.uuid, ioVal.data);
   })
   
   const updateXarrow = useXarrow();
@@ -100,76 +213,88 @@ function App() {
   ))
 
   //Generate HTML for diagram elements
+  //Diagram elements wrap inner content in a consistent draggable outer shell
   const diagramElements = graphData.diagrams[0].elements.map((elem) => {
+
+    //Construct inner content based on the diagram element's type
+    let innerContent = <div></div>
     if(elem.diaType == "box")
     {
-      return (
-        <Draggable
-          defaultPosition={elem.content.position}
-          onDrag={updateXarrow}
-          onStop={updateXarrow}
-          key={"draggable-" + elem.meta.uuid}
-        >
-          <div 
-            id={elem.meta.uuid}
-            style={{
-              border: "2px solid #000000",
-              backgroundColor: "#4f5af8",
-              width: "200px",
-              color: "#ffffff",
-              padding: "5px",
-              position: "absolute"
-            }}
-          >
-            {elem.meta.name ?? "Untitled Element"}
-            <hr style={{border: "1px solid black", marginInline: "-5px"}}/>
-            {elem.causalType}
-          </div>
-        </Draggable>
-      )
+      innerContent = <div>
+        {elem.meta.name ?? "Untitled Element"}
+        <hr style={{border: "1px solid black", marginInline: "-5px"}}/>
+        {elem.causalType}
+      </div>
     }
-    if(elem.diaType == "controlRange")
+    else if(elem.diaType == "controlRange")
     {
-
       const elemIOValuesList = controlsMap.get(elem.meta.uuid) ?? [null];
 
-      return (
-        <Draggable
-          defaultPosition={elem.content.position}
-          onDrag={updateXarrow}
-          onStop={updateXarrow}
-          key={"draggable-" + elem.meta.uuid}
+      innerContent = <Slider
+        title={elem.causalType + ": " + (elem.meta.name ?? "Unnamed slider")}
+        min={elem.content.controlParameters?.min ?? 0}
+        max={elem.content.controlParameters?.max ?? 10}
+        step={elem.content.controlParameters?.step ?? 1}
+        currentValue={computedIOValues.get(elemIOValuesList[0]) ?? -1}
+        setCurrentValue={(elem.content.controlParameters?.isInteractive ?? false)
+          ? (value) => {
+            setIOValues((prevIOValues) => {
+              const newIOVals = new Map(prevIOValues);
+              newIOVals.set(elemIOValuesList[0], value);
+              return newIOVals;
+            });
+          }
+          : () => {} }              
+      ></Slider>
+    }
+    
+    //Construct draggable outer shell and put inner content inside
+    return (
+      <Draggable
+        handle=".handle"
+        defaultPosition={elem.content.position}
+        onDrag={updateXarrow}
+        onStop={updateXarrow}
+        key={"draggable-" + elem.meta.uuid}
+      >
+        {/*Draggable supports only one child element. Wrap children one div.*/}
+        {/*This div holds the element UUID for Xarrows mapping.*/}
+        <div
+          id={elem.meta.uuid}
+          style= {{
+            position: "absolute"
+          }}
         >
+          {/*Upper black handle for dragging the draggable element.*/}
+          <div 
+            className="handle"
+            style={{
+              backgroundColor: "#000000",
+              color: "#cccccc",
+              width: "314px",
+              height: "15px",
+              cursor: "grab"
+            }}
+          ></div>
+          {/*Lower blue square for holding inner content.*/}
           <div
-            id={elem.meta.uuid}
             style={{
               border: "2px solid #000000",
               backgroundColor: "#4f5af8",
-              width: "300px",
               color: "#ffffff",
               padding: "5px",
-              position: "absolute"
+              width: "300px"
             }}
           >
-            <Slider
-              title={elem.causalType + ": " + (elem.meta.name ?? "Unnamed slider")}
-              min={elem.content.controlParameters?.min ?? 0}
-              max={elem.content.controlParameters?.max ?? 10}
-              step={elem.content.controlParameters?.step ?? 1}
-              currentValue={IOValues.get(elemIOValuesList[0]) ?? -1}
-              setCurrentValue={(elem.content.controlParameters?.isInteractive ?? false) ? function (value: SetStateAction<number>): void {
-                // IOValues.set(elemIOValuesList[0], value);
-                // evaluateModel();
-                //TODO: MAKE THIS ACTUALLY UPDATE VALUES AND RE-EVALUATE THE MODEL!!!
-              } : () => {} }              
-            ></Slider>
+            {innerContent}
           </div>
-        </Draggable>
-      )
-    }
+        </div>
+      </Draggable>
+    )
   })
 
   return (
+    /*Wrapper for Xarrows*/
     <Xwrapper>
       <div style={{ fontFamily: "sans-serif"}}>
         {/* Draw arrows BELOW element boxes */}
