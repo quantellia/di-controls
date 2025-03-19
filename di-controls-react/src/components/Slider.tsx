@@ -22,7 +22,7 @@ function Slider({
   return (
     <>
       {title}
-      <br /> <br />
+      <br />
       {currentValue}
       <br />
       <input

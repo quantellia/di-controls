@@ -250,13 +250,13 @@ function App() {
       </div>
     }
 
-    let displayContents = elem.displays.map((elemDisplay) => {
+    let displayContents = elem.displays?.map((elemDisplay) => {
       let thisDisplay = <div></div>
       if(elemDisplay.displayType == "controlRange")
       {
         const displayIOValuesList = controlsMap.get(elemDisplay.meta.uuid) ?? [null];
         thisDisplay = <div><Slider
-          title={(elemDisplay.meta.name ?? "")}
+          title={(elemDisplay.meta.name)}
           min={elemDisplay.content.controlParameters?.min ?? 0}
           max={elemDisplay.content.controlParameters?.max ?? 10}
           step={elemDisplay.content.controlParameters?.step ?? 1}
@@ -370,7 +370,7 @@ function App() {
             style={{
               backgroundColor: "#000000",
               color: "#cccccc",
-              width: "314px",
+              width: "313px",
               height: "15px",
               cursor: "grab"
             }}
