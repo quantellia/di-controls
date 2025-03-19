@@ -1,5 +1,5 @@
 import { useCallback, useState, useMemo } from "react";
-import graphData from "./model_json/multistep_adder.json" assert {type: "json"};
+import graphData from "./model_json/strings_bools.json" assert {type: "json"};
 import Draggable from "react-draggable";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
 import Slider from "./components/Slider";
@@ -22,20 +22,22 @@ import Slider from "./components/Slider";
 
 // function test() {
 //   (function () {
-//     //Expects a boolean first, then an arbitrary-length list of strings
-//     //to combine. Boolean determines order.
-//     const combineStrings = function (vals) {
-//       const reverseOrder = vals[0];
-//       vals = reverseOrder ? vals.shift().reverse() : vals.shift();
-      
-//       let outString = ""
-//       vals.forEach((val) => {
-//         outString += val;
-//       });
-//       return [outString];
-//     };
-  
-//     return { funcMap: { "combineStrings": combineStrings } };
+//       //Expects a boolean first, then an arbitrary-length list of strings
+//       //to combine. Boolean determines order.
+//       const combineStrings = function (vals) {
+//           console.log(vals);
+//           const reverseOrder = vals[0];
+//           vals = reverseOrder ? vals.slice(1).reverse() : vals.slice(1);
+//           console.log(vals);
+
+//           let outString = ""
+//           vals.forEach((val) => {
+//           outString += val;
+//           });
+//           return [outString];
+//       };
+    
+//       return { funcMap: { "combineStrings": combineStrings } };
 //   })();
 // }
 
@@ -106,7 +108,7 @@ function App() {
     let unevaluated = new Array<string>(); //Lists UUIDs for Eval Elements that haven't been evaluated yet
     let outputValues = new Set<string>(); //Lists UUIDs for IO Vals that are referenced in Eval Elements as Outputs
     //Populate the above empties
-    data.evaluatables[evalModelNumber].elements.forEach((elem) => {
+    data.runnableModels[evalModelNumber].elements.forEach((elem) => {
       evals.set(elem.meta.uuid, elem);
       unevaluated.push(elem.meta.uuid); //All elements start as unevaluated
 
@@ -200,20 +202,20 @@ function App() {
   //Maps diagram element UUIDs to their list of associated I/O values. Associated via their control.
   let controlsMap = new Map<string, Array<string>>(); //"<DiaElemUUID>": ["<IOValueUUID>", ... "<IOValueUUID>"]
   graphData.controls.forEach((control) => {
-    control.diagramElements.forEach((controlledDiagramElementUUID) => {
-      if(controlsMap.get(controlledDiagramElementUUID) !== undefined)
+    control.displays.forEach((controlledDisplayUUID) => {
+      if(controlsMap.get(controlledDisplayUUID) !== undefined)
       {
         console.error(
-          `Error: Multiple Control elements found for Diagram Element ${controlledDiagramElementUUID}.`,
+          `Error: Multiple Control elements found for Diagram Element ${controlledDisplayUUID}.`,
           `Engine will only use the first control processed for this element. Ignoring control: `,
           control,
           ` - This element has these associated I/O values: `,
-          controlsMap.get(controlledDiagramElementUUID)
+          controlsMap.get(controlledDisplayUUID)
         )
       }
       else
       {
-        controlsMap.set(controlledDiagramElementUUID, control.inputOutputValues);
+        controlsMap.set(controlledDisplayUUID, control.inputOutputValues);
       }
     })
   })
@@ -235,94 +237,121 @@ function App() {
   //Diagram elements wrap inner content in a consistent draggable outer shell
   const diagramElements = graphData.diagrams[0].elements.map((elem) => {
 
-    //Construct inner content based on the diagram element's type
-    let innerContent = <div></div>
-    const elemIOValuesList = controlsMap.get(elem.meta.uuid) ?? [null];
-    if(elem.diaType == "box")
+    let headerContent = null;
+    if(elem.causalType !== null)
     {
-      innerContent = <div>
-        {elem.meta.name ?? "Untitled Element"}
+      headerContent = <div>
+        <div style={{wordWrap: "break-word", width: "300px"}}>
+          <label>{elem.meta.name ?? "Untitled Element"}</label>
+          <br></br>
+          <label>{elem.causalType}</label>
+        </div>
         <hr style={{border: "1px solid black", marginInline: "-5px"}}/>
-        {elem.causalType}
       </div>
     }
-    else if(elem.diaType == "controlRange")
-    {
-      innerContent = <Slider
-        title={elem.causalType + ": " + (elem.meta.name ?? "Unnamed slider")}
-        min={elem.content.controlParameters?.min ?? 0}
-        max={elem.content.controlParameters?.max ?? 10}
-        step={elem.content.controlParameters?.step ?? 1}
-        currentValue={computedIOValues.get(elemIOValuesList[0]) ?? -1}
-        setCurrentValue={(elem.content.controlParameters?.isInteractive ?? false)
-          ? (value) => {
-            setIOValues((prevIOValues) => {
-              const newIOVals = new Map(prevIOValues);
-              newIOVals.set(elemIOValuesList[0], value);
-              return newIOVals;
-            });
-          }
-          : () => {} }              
-      ></Slider>
-    }
-    else if(elem.diaType == "controlText")
-    {
-      let textDisplay = <div></div>
-      if(elem.content.controlParameters?.isInteractive ?? false)
+
+    let displayContents = elem.displays.map((elemDisplay) => {
+      let thisDisplay = <div></div>
+      if(elemDisplay.displayType == "controlRange")
       {
-        textDisplay = <input
-          type="text"
-          value={computedIOValues.get(elemIOValuesList[0]) ?? elem.content.controlParameters?.value ?? ""}
-          onChange={(event) => {
-            setIOValues((prevIOValues) => {
-              const newValue = event.target.value;
-              const newIOVals = new Map(prevIOValues);
-              newIOVals.set(elemIOValuesList[0], newValue);
-              return newIOVals;
-            })
-          }}
-        />
+        const displayIOValuesList = controlsMap.get(elemDisplay.meta.uuid) ?? [null];
+        thisDisplay = <div><Slider
+          title={(elemDisplay.meta.name ?? "")}
+          min={elemDisplay.content.controlParameters?.min ?? 0}
+          max={elemDisplay.content.controlParameters?.max ?? 10}
+          step={elemDisplay.content.controlParameters?.step ?? 1}
+          currentValue={computedIOValues.get(displayIOValuesList[0]) ?? -1}
+          setCurrentValue={(elemDisplay.content.controlParameters?.isInteractive ?? false)
+            ? (value) => {
+              setIOValues((prevIOValues) => {
+                const newIOVals = new Map(prevIOValues);
+                newIOVals.set(displayIOValuesList[0], value);
+                return newIOVals;
+              });
+            }
+            : () => {} }              
+        ></Slider></div>
       }
-      else
+      else if(elemDisplay.displayType == "controlText")
       {
-        textDisplay = <div style={{wordWrap: "break-word", width: "300px"}}>
-          <hr style={{border: "1px solid black", marginInline: "-5px"}}/>
-          <label>{computedIOValues.get(elemIOValuesList[0]) ?? elem.content.controlParameters?.value ?? ""}</label>
-        </div>
+        const displayIOValuesList = controlsMap.get(elemDisplay.meta.uuid) ?? [null];
+        let textDisplay = <div></div>
+        if(elemDisplay.content.controlParameters?.isInteractive ?? false)
+        {
+          textDisplay = <input
+            type="text"
+            value={computedIOValues.get(displayIOValuesList[0]) ?? elemDisplay.content.controlParameters?.value ?? ""}
+            onChange={(event) => {
+              setIOValues((prevIOValues) => {
+                const newValue = event.target.value;
+                const newIOVals = new Map(prevIOValues);
+                newIOVals.set(displayIOValuesList[0], newValue);
+                return newIOVals;
+              })
+            }}
+          />
+        }
+        else
+        {
+          textDisplay = <div style={{wordWrap: "break-word", width: "300px"}}>
+            <label>{computedIOValues.get(displayIOValuesList[0]) ?? elemDisplay.content.controlParameters?.value ?? ""}</label>
+          </div>
+        }
+
+        const displayLabel = elemDisplay.meta.name ?
+          <div>
+            <br></br>
+            {elemDisplay.meta.name}
+          </div>
+          : null;
+        thisDisplay = <div>
+            {displayLabel}
+            {textDisplay}
+          </div>
       }
-      innerContent = <div>
-          {elem.causalType}: {elem.meta.name ?? "Untitled Element"}
-          <br/>
-          {textDisplay}
+      else if(elemDisplay.displayType == "controlBoolean")
+      {
+        const displayIOValuesList = controlsMap.get(elemDisplay.meta.uuid) ?? [null];
+        
+        const displayLabel = elemDisplay.meta.name ?
+          <div>
+            <br></br>
+            {elemDisplay.meta.name}
+          </div>
+          : null;
+
+        thisDisplay = 
+        <div>
+          {displayLabel}
+          <input
+            type="checkbox"
+            checked={computedIOValues.get(displayIOValuesList[0]) ?? !!(elemDisplay.content.controlParameters?.value)}
+            onChange={(event) => {
+              setIOValues((prevIOValues) => {
+                const newValue = event.target.checked;
+                const newIOVals = new Map(prevIOValues);
+                newIOVals.set(displayIOValuesList[0], newValue);
+                return newIOVals;
+              })
+            }}
+          />
         </div>
-    }
-    else if(elem.diaType == "controlBoolean")
-    {
-      innerContent = 
-      <div>
-        {elem.causalType}: {elem.meta.name ?? "Untitled Element"}
-        <br/>
-        <input
-          type="checkbox"
-          checked={computedIOValues.get(elemIOValuesList[0]) ?? !!(elem.content.controlParameters?.value)}
-          onChange={(event) => {
-            setIOValues((prevIOValues) => {
-              const newValue = event.target.checked;
-              const newIOVals = new Map(prevIOValues);
-              newIOVals.set(elemIOValuesList[0], newValue);
-              return newIOVals;
-            })
-          }}
-        />
-      </div>
-      
-    }
+        
+      }
+      return thisDisplay;
+    })
+
+    //Construct inner content based on the diagram element's display contents
+    let innerContent = <div>
+      {headerContent ?? <div></div>}
+      {displayContents}
+    </div>
     
     //Construct draggable outer shell and put inner content inside
     return (
       <Draggable
         handle=".handle"
-        defaultPosition={elem.content.position}
+        defaultPosition={elem.position}
         onDrag={updateXarrow}
         onStop={updateXarrow}
         key={"draggable-" + elem.meta.uuid}

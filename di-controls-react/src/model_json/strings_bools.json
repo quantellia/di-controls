@@ -79,7 +79,7 @@
             },
             "evalType": "Script",
             "content": {
-                "script": "KGZ1bmN0aW9uICgpIHsKICAgIC8vRXhwZWN0cyBhIGJvb2xlYW4gZmlyc3QsIHRoZW4gYW4gYXJiaXRyYXJ5LWxlbmd0aCBsaXN0IG9mIHN0cmluZ3MKICAgIC8vdG8gY29tYmluZS4gQm9vbGVhbiBkZXRlcm1pbmVzIG9yZGVyLgogICAgY29uc3QgY29tYmluZVN0cmluZ3MgPSBmdW5jdGlvbiAodmFsczogQXJyYXk8YW55PikgewogICAgICBjb25zdCByZXZlcnNlT3JkZXIgPSB2YWxzWzBdOwogICAgICB2YWxzID0gcmV2ZXJzZU9yZGVyID8gdmFscy5zaGlmdCgpLnJldmVyc2UoKSA6IHZhbHMuc2hpZnQoKTsKICAgICAgCiAgICAgIGxldCBvdXRTdHJpbmcgPSAiIgogICAgICB2YWxzLmZvckVhY2goKHZhbCkgPT4gewogICAgICAgIG91dFN0cmluZyArPSB2YWw7CiAgICAgIH0pOwogICAgICByZXR1cm4gW291dFN0cmluZ107CiAgICB9OwogIAogICAgcmV0dXJuIHsgZnVuY01hcDogeyAiY29tYmluZVN0cmluZ3MiOiBjb21iaW5lU3RyaW5ncyB9IH07CiAgfSkoKTs=",
+                "script": "KGZ1bmN0aW9uICgpIHsKICAgIC8vRXhwZWN0cyBhIGJvb2xlYW4gZmlyc3QsIHRoZW4gYW4gYXJiaXRyYXJ5LWxlbmd0aCBsaXN0IG9mIHN0cmluZ3MKICAgIC8vdG8gY29tYmluZS4gQm9vbGVhbiBkZXRlcm1pbmVzIG9yZGVyLgogICAgY29uc3QgY29tYmluZVN0cmluZ3MgPSBmdW5jdGlvbiAodmFscykgewogICAgICAgIGNvbnNvbGUubG9nKHZhbHMpOwogICAgICAgIGNvbnN0IHJldmVyc2VPcmRlciA9IHZhbHNbMF07CiAgICAgICAgdmFscyA9IHJldmVyc2VPcmRlciA/IHZhbHMuc2xpY2UoMSkucmV2ZXJzZSgpIDogdmFscy5zbGljZSgxKTsKICAgICAgICBjb25zb2xlLmxvZyh2YWxzKTsKCiAgICAgICAgbGV0IG91dFN0cmluZyA9ICIiCiAgICAgICAgdmFscy5mb3JFYWNoKCh2YWwpID0+IHsKICAgICAgICBvdXRTdHJpbmcgKz0gdmFsOwogICAgICAgIH0pOwogICAgICAgIHJldHVybiBbb3V0U3RyaW5nXTsKICAgIH07CiAgCiAgICByZXR1cm4geyBmdW5jTWFwOiB7ICJjb21iaW5lU3RyaW5ncyI6IGNvbWJpbmVTdHJpbmdzIH0gfTsKfSkoKTs=",
                 "language": "javascript"
             }
         }
@@ -172,8 +172,8 @@
                     },
                     "causalType": "External",
                     "position": {
-                        "x": 510,
-                        "y": 250
+                        "x": 520,
+                        "y": 290
                     },
                     "displays": [
                         {
@@ -197,8 +197,8 @@
                     },
                     "causalType": "Lever",
                     "position": {
-                        "x": 210,
-                        "y": 200
+                        "x": 160,
+                        "y": 220
                     },
                     "displays": [
                         {
@@ -222,8 +222,8 @@
                     },
                     "causalType": "Lever",
                     "position": {
-                        "x": 210,
-                        "y": 130
+                        "x": 160,
+                        "y": 110
                     },
                     "displays": [
                         {
@@ -248,8 +248,8 @@
                     },
                     "causalType": "External",
                     "position": {
-                        "x": 510,
-                        "y": 500
+                        "x": 520,
+                        "y": 540
                     },
                     "displays": [
                         {
@@ -273,8 +273,8 @@
                     },
                     "causalType": "Lever",
                     "position": {
-                        "x": 200,
-                        "y": 450
+                        "x": 160,
+                        "y": 470
                     },
                     "displays": [
                         {
@@ -298,8 +298,8 @@
                     },
                     "causalType": "Lever",
                     "position": {
-                        "x": 200,
-                        "y": 380
+                        "x": 160,
+                        "y": 360
                     },
                     "displays": [
                         {
@@ -374,8 +374,8 @@
                     },
                     "causalType": "External",
                     "position": {
-                        "x": 840,
-                        "y": 390
+                        "x": 900,
+                        "y": 430
                     },
                     "displays": [
                         {
@@ -399,7 +399,7 @@
                     },
                     "causalType": "Outcome",
                     "position": {
-                        "x": 850,
+                        "x": 900,
                         "y": 300
                     },
                     "displays": [
@@ -411,7 +411,7 @@
                             "content": {
                                 "controlParameters": {
                                     "value": "",
-                                    "isInteractive": true
+                                    "isInteractive": false
                                 }
                             }
                         }
