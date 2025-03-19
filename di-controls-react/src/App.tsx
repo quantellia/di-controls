@@ -1,5 +1,5 @@
 import { useCallback, useState, useMemo } from "react";
-import graphData from "./model_json/strings_bools.json" assert {type: "json"};
+import graphData from "./model_json/strings_bools_multidisplays.json" assert {type: "json"};
 import Draggable from "react-draggable";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
 import Slider from "./components/Slider";
@@ -256,7 +256,7 @@ function App() {
       {
         const displayIOValuesList = controlsMap.get(elemDisplay.meta.uuid) ?? [null];
         thisDisplay = <div><Slider
-          title={(elemDisplay.meta.name)}
+          title={(elemDisplay.meta.name ?? "")}
           min={elemDisplay.content.controlParameters?.min ?? 0}
           max={elemDisplay.content.controlParameters?.max ?? 10}
           step={elemDisplay.content.controlParameters?.step ?? 1}
