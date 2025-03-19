@@ -1,0 +1,4 @@
+[submodule "di-controls-react/src/model_json/schemas"]
+	path = di-controls-react/src/model_json/schemas
+	url = git@github.com:opendi-org/cdm-json-schema.git
+	branch = dev-sourceonly

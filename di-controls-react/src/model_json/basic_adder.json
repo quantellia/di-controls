@@ -1,5 +1,5 @@
 {
-  "$schema": "./Causal-Decision-Model.json",
+  "$schema": "./schemas/Causal-Decision-Model.json",
   "meta": {
     "uuid": "28eefdc9-d38c-458d-a0b1-cba3706a09e4",
     "name": "Example/Test Model",
@@ -31,9 +31,6 @@
           "functionName": "add",
           "evaluatableAsset": "a14ae3d2-c070-4485-b6d1-3af8e1a87cad"
         }
-      ],
-      "entryPoints": [
-        "8285d781-826f-4de3-9ded-be75e46935d3"
       ]
     }
   ],

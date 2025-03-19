@@ -1,5 +1,5 @@
 import { useCallback, useState, useMemo } from "react";
-import graphData from "./schema_compliant_cdd_multistep_adder.json" assert {type: "json"};
+import graphData from "./model_json/multistep_adder.json" assert {type: "json"};
 import Draggable from "react-draggable";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
 import Slider from "./components/Slider";
@@ -17,6 +17,25 @@ import Slider from "./components/Slider";
 //     };
   
 //     return { funcMap: { "add": add } };
+//   })();
+// }
+
+// function test() {
+//   (function () {
+//     //Expects a boolean first, then an arbitrary-length list of strings
+//     //to combine. Boolean determines order.
+//     const combineStrings = function (vals) {
+//       const reverseOrder = vals[0];
+//       vals = reverseOrder ? vals.shift().reverse() : vals.shift();
+      
+//       let outString = ""
+//       vals.forEach((val) => {
+//         outString += val;
+//       });
+//       return [outString];
+//     };
+  
+//     return { funcMap: { "combineStrings": combineStrings } };
 //   })();
 // }
 
@@ -218,6 +237,7 @@ function App() {
 
     //Construct inner content based on the diagram element's type
     let innerContent = <div></div>
+    const elemIOValuesList = controlsMap.get(elem.meta.uuid) ?? [null];
     if(elem.diaType == "box")
     {
       innerContent = <div>
@@ -228,8 +248,6 @@ function App() {
     }
     else if(elem.diaType == "controlRange")
     {
-      const elemIOValuesList = controlsMap.get(elem.meta.uuid) ?? [null];
-
       innerContent = <Slider
         title={elem.causalType + ": " + (elem.meta.name ?? "Unnamed slider")}
         min={elem.content.controlParameters?.min ?? 0}
@@ -246,6 +264,58 @@ function App() {
           }
           : () => {} }              
       ></Slider>
+    }
+    else if(elem.diaType == "controlText")
+    {
+      let textDisplay = <div></div>
+      if(elem.content.controlParameters?.isInteractive ?? false)
+      {
+        textDisplay = <input
+          type="text"
+          value={computedIOValues.get(elemIOValuesList[0]) ?? elem.content.controlParameters?.value ?? ""}
+          onChange={(event) => {
+            setIOValues((prevIOValues) => {
+              const newValue = event.target.value;
+              const newIOVals = new Map(prevIOValues);
+              newIOVals.set(elemIOValuesList[0], newValue);
+              return newIOVals;
+            })
+          }}
+        />
+      }
+      else
+      {
+        textDisplay = <div style={{wordWrap: "break-word", width: "300px"}}>
+          <hr style={{border: "1px solid black", marginInline: "-5px"}}/>
+          <label>{computedIOValues.get(elemIOValuesList[0]) ?? elem.content.controlParameters?.value ?? ""}</label>
+        </div>
+      }
+      innerContent = <div>
+          {elem.causalType}: {elem.meta.name ?? "Untitled Element"}
+          <br/>
+          {textDisplay}
+        </div>
+    }
+    else if(elem.diaType == "controlBoolean")
+    {
+      innerContent = 
+      <div>
+        {elem.causalType}: {elem.meta.name ?? "Untitled Element"}
+        <br/>
+        <input
+          type="checkbox"
+          checked={computedIOValues.get(elemIOValuesList[0]) ?? !!(elem.content.controlParameters?.value)}
+          onChange={(event) => {
+            setIOValues((prevIOValues) => {
+              const newValue = event.target.checked;
+              const newIOVals = new Map(prevIOValues);
+              newIOVals.set(elemIOValuesList[0], newValue);
+              return newIOVals;
+            })
+          }}
+        />
+      </div>
+      
     }
     
     //Construct draggable outer shell and put inner content inside
