@@ -33,7 +33,7 @@ function Slider({
         step={step.toString()}
         value={currentValue.toString()}
         onChange={(event) => {
-          setCurrentValue(parseInt(event.target.value));
+          setCurrentValue(Number(event.target.value));
         }}
       />
       <br />

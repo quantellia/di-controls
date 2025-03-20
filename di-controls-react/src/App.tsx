@@ -71,7 +71,7 @@ function App() {
 
   //Evaluatable Assets: Import functions from their Base64-encoded string values
   let functionMap = new Map(); //"<ScriptUUID>_<FunctionName>": function
-  graphData.evaluatableAssets.forEach((evalAsset) => {
+  graphData.evaluatableAssets?.forEach((evalAsset) => {
     if(evalAsset.evalType == "Script" && evalAsset.content.language == "javascript")
     {
       const scriptString = atob(evalAsset.content.script);
@@ -89,7 +89,7 @@ function App() {
   const [IOValues, setIOValues] = useState(() => {
     //Generate initial map of IO Values, stored in IOValues.
     let initialIOValues = new Map();
-    graphData.inputOutputValues.forEach((ioVal) => {
+    graphData.inputOutputValues?.forEach((ioVal) => {
       initialIOValues.set(ioVal.meta.uuid, ioVal.data);
     });
     return initialIOValues;
@@ -101,6 +101,9 @@ function App() {
   const evaluateModel = useCallback((funcMap = functionMap, ioMap = IOValues, data = graphData, evalModelNumber = 0) => {
     console.log("Eval start.");
 
+    //Handle case where there's nothing to evaluate (Return a copy of IO Map unedited)
+    if(!data.runnableModels) return new Map(ioMap);
+
 
     // Model pre-processing
     
@@ -108,7 +111,7 @@ function App() {
     let unevaluated = new Array<string>(); //Lists UUIDs for Eval Elements that haven't been evaluated yet
     let outputValues = new Set<string>(); //Lists UUIDs for IO Vals that are referenced in Eval Elements as Outputs
     //Populate the above empties
-    data.runnableModels[evalModelNumber].elements.forEach((elem) => {
+    data.runnableModels[evalModelNumber]?.elements.forEach((elem) => {
       evals.set(elem.meta.uuid, elem);
       unevaluated.push(elem.meta.uuid); //All elements start as unevaluated
 
@@ -201,7 +204,7 @@ function App() {
 
   //Maps diagram element UUIDs to their list of associated I/O values. Associated via their control.
   let controlsMap = new Map<string, Array<string>>(); //"<DiaElemUUID>": ["<IOValueUUID>", ... "<IOValueUUID>"]
-  graphData.controls.forEach((control) => {
+  graphData.controls?.forEach((control) => {
     control.displays.forEach((controlledDisplayUUID) => {
       if(controlsMap.get(controlledDisplayUUID) !== undefined)
       {
@@ -237,7 +240,7 @@ function App() {
   //Diagram elements wrap inner content in a consistent draggable outer shell
   const diagramElements = graphData.diagrams[0].elements.map((elem) => {
 
-    let headerContent = null;
+    let headerContent = <div></div>;
     if(elem.causalType !== null)
     {
       headerContent = <div>
@@ -260,12 +263,12 @@ function App() {
           min={elemDisplay.content.controlParameters?.min ?? 0}
           max={elemDisplay.content.controlParameters?.max ?? 10}
           step={elemDisplay.content.controlParameters?.step ?? 1}
-          currentValue={computedIOValues.get(displayIOValuesList[0]) ?? -1}
+          currentValue={computedIOValues.get(displayIOValuesList[0]) ?? IOValues.get(elemDisplay.meta.uuid) ?? elemDisplay.content.controlParameters?.value ?? -1}
           setCurrentValue={(elemDisplay.content.controlParameters?.isInteractive ?? false)
             ? (value) => {
               setIOValues((prevIOValues) => {
                 const newIOVals = new Map(prevIOValues);
-                newIOVals.set(displayIOValuesList[0], value);
+                newIOVals.set(displayIOValuesList[0] ?? elemDisplay.meta.uuid, value);
                 return newIOVals;
               });
             }
@@ -285,7 +288,7 @@ function App() {
               setIOValues((prevIOValues) => {
                 const newValue = event.target.value;
                 const newIOVals = new Map(prevIOValues);
-                newIOVals.set(displayIOValuesList[0], newValue);
+                newIOVals.set(displayIOValuesList[0] ?? elemDisplay.meta.uuid, newValue);
                 return newIOVals;
               })
             }}
@@ -330,7 +333,7 @@ function App() {
               setIOValues((prevIOValues) => {
                 const newValue = event.target.checked;
                 const newIOVals = new Map(prevIOValues);
-                newIOVals.set(displayIOValuesList[0], newValue);
+                newIOVals.set(displayIOValuesList[0] ?? elemDisplay.meta.uuid, newValue);
                 return newIOVals;
               })
             }}
@@ -370,7 +373,7 @@ function App() {
             style={{
               backgroundColor: "#000000",
               color: "#cccccc",
-              width: "313px",
+              width: "314px",
               height: "15px",
               cursor: "grab"
             }}
