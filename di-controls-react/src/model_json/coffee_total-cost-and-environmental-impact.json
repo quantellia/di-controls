@@ -34,28 +34,6 @@
         "language": "javascript",
         "script": "KGZ1bmN0aW9uICgpIHsKCiAgICAvL0lNUExFTUVOVCBZT1VSIEZVTkNUSU9OIEFTIEEgQ09OU1QgSEVSRToKICAgIGNvbnN0IGdldEVudmlyb25tZW50YWxJbXBhY3QgPSBmdW5jdGlvbiAoaW5wdXRzKSB7CiAgICAgICAgY29uc3QgbnVtQXJnc0V4cGVjdGVkID0gNTsKICAgICAgICBsZXQgZW52aXJvbm1lbnRhbEltcGFjdCA9IDA7CiAgICAgICAgaWYoIWlucHV0cy5sZW5ndGggPT0gbnVtQXJnc0V4cGVjdGVkKQogICAgICAgIHsKICAgICAgICAgICAgY29uc29sZS5lcnJvcigiRXJyb3IgaW4gYXR0YWNoZWQgc2NyaXB0IGdldENvZmZlZVRvdGFsczogSW52YWxpZCBpbnB1dHMgIiwgaW5wdXRzKTsKICAgICAgICAgICAgcmV0dXJuIFtlbnZpcm9ubWVudGFsSW1wYWN0XTsKICAgICAgICB9CgogICAgICAgIGNvbnN0IFt0aW1lRnJhbWVEYXlzLCBpbXBhY3RSYXRlRlRCRlBlclBvdW5kUGVyRGF5LCBpbXBhY3RSYXRlUmVndWxhclBlclBvdW5kUGVyRGF5LCBsYnNCb3VnaHRGVEJGLCBsYnNCb3VnaHRSZWd1bGFyXSA9IGlucHV0cwogICAgICAgIAogICAgICAgIGNvbnN0IGltcGFjdEZUQkYgPSAobGJzQm91Z2h0RlRCRiAvIHRpbWVGcmFtZURheXMpICogaW1wYWN0UmF0ZUZUQkZQZXJQb3VuZFBlckRheTsKICAgICAgICBjb25zdCBpbXBhY3RSZWd1bGFyID0gKGxic0JvdWdodFJlZ3VsYXIgLyB0aW1lRnJhbWVEYXlzKSAqIGltcGFjdFJhdGVSZWd1bGFyUGVyUG91bmRQZXJEYXk7CgogICAgICAgIGVudmlyb25tZW50YWxJbXBhY3QgPSBpbXBhY3RGVEJGICsgaW1wYWN0UmVndWxhcjsKCiAgICAgICAgcmV0dXJuIFtlbnZpcm9ubWVudGFsSW1wYWN0XTsKICAgIH0KCiAgICAvL01BUCBZT1VSIEZVTkNUSU9OIFRPIEEgU1RSSU5HIE5BTUUgSEVSRToKICAgIHJldHVybiB7IGZ1bmNNYXA6IHsiZ2V0RW52aXJvbm1lbnRhbEltcGFjdCI6IGdldEVudmlyb25tZW50YWxJbXBhY3R9IH07Cgp9KSgpOwoKCi8vIFRvIGltcG9ydCBhIHNjcmlwdCwgaXQgbXVzdCB1c2UgYSBzaW1pbGFyIHN0cnVjdHVyZSB0byB0aGUgZXhhbXBsZSBjb2RlIGFib3ZlLiBJdCBzaG91bGQgdGFrZSB0aGUgZm9ybSBvZgovLyBhbiBpbW1lZGlhdGVseSBpbnZva2VkIGZ1bmN0aW9uIGV4cHJlc3Npb246IGh0dHBzOi8vZGV2ZWxvcGVyLm1vemlsbGEub3JnL2VuLVVTL2RvY3MvR2xvc3NhcnkvSUlGRSB3aGVyZSB0aGUKLy8gZnVuY3Rpb24gcmV0dXJucyBhIGZ1bmN0aW9uIG1hcCBjYWxsZWQgZnVuY01hcC4KLy8gCi8vIGZ1bmNNYXAgc2hvdWxkIGhhdmUgc3RyaW5nIGtleXMgYW5kIGZ1bmN0aW9uIHZhbHVlcy4gU3RyaW5nIGtleXMgd2lsbCBiZSB1c2VkIGJ5IEV2YWx1YXRhYmxlIEVsZW1lbnRzCi8vIHRvIHBhc3MgaW5wdXRzIHRvIGFuZCByZWNlaXZlIG91dHB1dHMgZnJvbSB0aGUgZnVuY3Rpb25zLgovLyAKLy8gRWFjaCBzY3JpcHQgbWF5IGRlZmluZSBhcmJpdHJhcmlseSBtYW55IGZ1bmN0aW9ucywgc28gbG9uZyBhcyB0aGV5J3JlIGFsbCBleHBvc2VkIHZpYSBmdW5jTWFwLgovLyAKLy8gRnVuY3Rpb24gaW5wdXRzIHdpbGwgdGFrZSB0aGUgZm9ybSBvZiBhIHNpbmdsZSBhcnJheSBvZiA8YW55PiB2YWx1ZXMuCi8vIEZ1bmN0aW9ucyBzaG91bGQgbGlrZXdpc2UgcmV0dXJuIGFuIGFycmF5IG9mIDxhbnk+IHZhbHVlcy4KLy8gTWVhbmluZyBmb3IgYXJndW1lbnRzIGFuZCByZXR1cm4gdmFsdWVzIGlzIGRldGVybWluZWQgYnkgdGhlaXIgb3JkZXIgaW4gdGhlIGFycmF5Lg=="
       }
-    },
-    {
-      "meta": {
-        "uuid": "9bd989ea-03b5-403b-a31d-e349fd578118",
-        "name": "Get Social Impact"
-      },
-      "evalType": "Script",
-      "content": {
-        "language": "javascript",
-        "script": "KGZ1bmN0aW9uICgpIHsKCiAgICAvL0lNUExFTUVOVCBZT1VSIEZVTkNUSU9OIEFTIEEgQ09OU1QgSEVSRToKICAgIGNvbnN0IGdldFNvY2lhbEltcGFjdCA9IGZ1bmN0aW9uIChpbnB1dHMpIHsKICAgICAgICBjb25zdCBudW1BcmdzRXhwZWN0ZWQgPSA2OwogICAgICAgIGxldCBzb2NpYWxJbXBhY3QgPSAwOwogICAgICAgIGlmKCFpbnB1dHMubGVuZ3RoID09IG51bUFyZ3NFeHBlY3RlZCkKICAgICAgICB7CiAgICAgICAgICAgIGNvbnNvbGUuZXJyb3IoIkVycm9yIGluIGF0dGFjaGVkIHNjcmlwdCBnZXRDb2ZmZWVUb3RhbHM6IEludmFsaWQgaW5wdXRzICIsIGlucHV0cyk7CiAgICAgICAgICAgIHJldHVybiBbc29jaWFsSW1wYWN0XTsKICAgICAgICB9CgogICAgICAgIGNvbnN0IFt0aW1lRnJhbWVEYXlzLCBtb25leVNwZW50T25GVEJGQ29mZmVlLCBtb25leVNwZW50T25SZWd1bGFyQ29mZmVlLCBzb2NpYWxSZXZlbnVlUGVyY2VudEZUQkZDb2ZmZWUsIHNvY2lhbFJldmVudWVQZXJjZW50UmVndWxhckNvZmZlZSwgcmVmZXJlbmNlRGFpbHlTb2NpYWxJbXBhY3RSZXZlbnVlXSA9IGlucHV0cwogICAgICAgIAogICAgICAgIC8vICJSZWZlcmVuY2UiIGRhaWx5IHNvY2lhbCBpbXBhY3QgcmV2ZW51ZSBpcyB0aGUgYW1vdW50IG9mIHNvY2lhbCBpbXBhY3QtZGlyZWN0ZWQgcmV2ZW51ZSBuZWVkZWQgZm9yIAogICAgICAgIC8vIGEgc29jaWFsIGltcGFjdCB2YWx1ZSBvZiAiMSIgaW4gdGhlIHRpbWUgcGVyaW9kIG9mIDEgZGF5LiBJZiB0aGlzIHZhbHVlIGlzIDAuMjUsIGFuZCB5b3VyIGNob2ljZSByZXN1bHRzCiAgICAgICAgLy8gaW4gJDAuMjUgcGVyIGRheSBvZiByZXZlbnVlIGdvaW5nIHRvd2FyZHMgc29jaWFsIGltcGFjdCwgeW91ciBzb2NpYWwgaW1wYWN0IHZhbHVlIHdpbGwgYmUgMS4KICAgICAgICBjb25zdCBkYWlseVNvY2lhbEltcGFjdFJldmVudWVGVEJGQ29mZmVlID0gKG1vbmV5U3BlbnRPbkZUQkZDb2ZmZWUgKiAoc29jaWFsUmV2ZW51ZVBlcmNlbnRGVEJGQ29mZmVlIC8gMTAwLjApKSAvIHRpbWVGcmFtZURheXM7CiAgICAgICAgY29uc3QgZGFpbHlTb2NpYWxJbXBhY3RSZXZlbnVlUmVndWxhckNvZmZlZSA9IChtb25leVNwZW50T25SZWd1bGFyQ29mZmVlICogKHNvY2lhbFJldmVudWVQZXJjZW50UmVndWxhckNvZmZlZSAvIDEwMC4wKSkgLyB0aW1lRnJhbWVEYXlzOwogICAgICAgIGNvbnN0IHRvdGFsRGFpbHlTb2NpYWxJbXBhY3RSZXZlbnVlID0gZGFpbHlTb2NpYWxJbXBhY3RSZXZlbnVlRlRCRkNvZmZlZSArIGRhaWx5U29jaWFsSW1wYWN0UmV2ZW51ZVJlZ3VsYXJDb2ZmZWU7CgogICAgICAgIHNvY2lhbEltcGFjdCA9IHRvdGFsRGFpbHlTb2NpYWxJbXBhY3RSZXZlbnVlIC8gcmVmZXJlbmNlRGFpbHlTb2NpYWxJbXBhY3RSZXZlbnVlOwoKCiAgICAgICAgcmV0dXJuIFtzb2NpYWxJbXBhY3RdOwogICAgfQoKICAgIC8vTUFQIFlPVVIgRlVOQ1RJT04gVE8gQSBTVFJJTkcgTkFNRSBIRVJFOgogICAgcmV0dXJuIHsgZnVuY01hcDogeyJnZXRTb2NpYWxJbXBhY3QiOiBnZXRTb2NpYWxJbXBhY3R9IH07Cgp9KSgpOwoKCi8vIFRvIGltcG9ydCBhIHNjcmlwdCwgaXQgbXVzdCB1c2UgYSBzaW1pbGFyIHN0cnVjdHVyZSB0byB0aGUgZXhhbXBsZSBjb2RlIGFib3ZlLiBJdCBzaG91bGQgdGFrZSB0aGUgZm9ybSBvZgovLyBhbiBpbW1lZGlhdGVseSBpbnZva2VkIGZ1bmN0aW9uIGV4cHJlc3Npb246IGh0dHBzOi8vZGV2ZWxvcGVyLm1vemlsbGEub3JnL2VuLVVTL2RvY3MvR2xvc3NhcnkvSUlGRSB3aGVyZSB0aGUKLy8gZnVuY3Rpb24gcmV0dXJucyBhIGZ1bmN0aW9uIG1hcCBjYWxsZWQgZnVuY01hcC4KLy8gCi8vIGZ1bmNNYXAgc2hvdWxkIGhhdmUgc3RyaW5nIGtleXMgYW5kIGZ1bmN0aW9uIHZhbHVlcy4gU3RyaW5nIGtleXMgd2lsbCBiZSB1c2VkIGJ5IEV2YWx1YXRhYmxlIEVsZW1lbnRzCi8vIHRvIHBhc3MgaW5wdXRzIHRvIGFuZCByZWNlaXZlIG91dHB1dHMgZnJvbSB0aGUgZnVuY3Rpb25zLgovLyAKLy8gRWFjaCBzY3JpcHQgbWF5IGRlZmluZSBhcmJpdHJhcmlseSBtYW55IGZ1bmN0aW9ucywgc28gbG9uZyBhcyB0aGV5J3JlIGFsbCBleHBvc2VkIHZpYSBmdW5jTWFwLgovLyAKLy8gRnVuY3Rpb24gaW5wdXRzIHdpbGwgdGFrZSB0aGUgZm9ybSBvZiBhIHNpbmdsZSBhcnJheSBvZiA8YW55PiB2YWx1ZXMuCi8vIEZ1bmN0aW9ucyBzaG91bGQgbGlrZXdpc2UgcmV0dXJuIGFuIGFycmF5IG9mIDxhbnk+IHZhbHVlcy4KLy8gTWVhbmluZyBmb3IgYXJndW1lbnRzIGFuZCByZXR1cm4gdmFsdWVzIGlzIGRldGVybWluZWQgYnkgdGhlaXIgb3JkZXIgaW4gdGhlIGFycmF5Lg=="
-      }
-    },
-    {
-      "meta": {
-        "uuid": "a7cd639e-8ce2-48ca-a60e-1911350c8014",
-        "name": "Get Combined Impact"
-      },
-      "evalType": "Script",
-      "content": {
-        "language": "javascript",
-        "script": "KGZ1bmN0aW9uICgpIHsKCiAgICAvL0lNUExFTUVOVCBZT1VSIEZVTkNUSU9OIEFTIEEgQ09OU1QgSEVSRToKICAgIGNvbnN0IGdldENvbWJpbmVkSW1wYWN0ID0gZnVuY3Rpb24gKGlucHV0cykgewogICAgICAgIGNvbnN0IG51bUFyZ3NFeHBlY3RlZCA9IDM7CiAgICAgICAgbGV0IGNvbWJpbmVkSW1wYWN0TnVtYmVyID0gMDsKICAgICAgICBsZXQgY29tYmluZWRJbXBhY3RMYWJlbCA9ICJVbmtub3duIjsKICAgICAgICBpZighaW5wdXRzLmxlbmd0aCA9PSBudW1BcmdzRXhwZWN0ZWQpCiAgICAgICAgewogICAgICAgICAgICBjb25zb2xlLmVycm9yKCJFcnJvciBpbiBhdHRhY2hlZCBzY3JpcHQgZ2V0Q29mZmVlVG90YWxzOiBJbnZhbGlkIGlucHV0cyAiLCBpbnB1dHMpOwogICAgICAgICAgICBjb21iaW5lZEltcGFjdExhYmVsID0gIkVycm9yIjsKICAgICAgICAgICAgcmV0dXJuIFtjb21iaW5lZEltcGFjdE51bWJlci50b0ZpeGVkKDIpLCBjb21iaW5lZEltcGFjdExhYmVsXTsKICAgICAgICB9CiAgICAgICAgY29uc3QgW2Vudmlyb25tZW50YWxJbXBhY3QsIHNvY2lhbEltcGFjdCwgbWFnbml0dWRlRm9yTm9uTmV1dHJhbExhYmVsXSA9IGlucHV0czsKICAgICAgICBjb25zdCBsYWJlbE9wdGlvbnMgPSBbIkJldHRlciIsICJOZXV0cmFsIiwgIldvcnNlIl07CiAgICAgICAgY29tYmluZWRJbXBhY3ROdW1iZXIgPSBzb2NpYWxJbXBhY3QgLSBlbnZpcm9ubWVudGFsSW1wYWN0OwoKICAgICAgICBjb21iaW5lZEltcGFjdExhYmVsID0gIiI7CiAgICAgICAgaWYoY29tYmluZWRJbXBhY3ROdW1iZXIgPCAwKSB7Y29tYmluZWRJbXBhY3RMYWJlbCA9ICIoLSkgIn0KICAgICAgICBpZihjb21iaW5lZEltcGFjdE51bWJlciA+IDApIHtjb21iaW5lZEltcGFjdExhYmVsID0gIigrKSAifQoKICAgICAgICBpZihNYXRoLmFicyhjb21iaW5lZEltcGFjdE51bWJlcikgPiBtYWduaXR1ZGVGb3JOb25OZXV0cmFsTGFiZWwpCiAgICAgICAgewogICAgICAgICAgICBpZihjb21iaW5lZEltcGFjdE51bWJlciA8IDApIHtjb21iaW5lZEltcGFjdExhYmVsICs9IGxhYmVsT3B0aW9uc1syXX0KICAgICAgICAgICAgZWxzZSB7Y29tYmluZWRJbXBhY3RMYWJlbCArPSBsYWJlbE9wdGlvbnNbMF19CiAgICAgICAgfQogICAgICAgIGVsc2UKICAgICAgICB7CiAgICAgICAgICAgIGNvbWJpbmVkSW1wYWN0TGFiZWwgKz0gbGFiZWxPcHRpb25zWzFdOwogICAgICAgIH0KICAgICAgICBjb25zb2xlLmxvZyhjb21iaW5lZEltcGFjdE51bWJlci50b0ZpeGVkKDIpLCBjb21iaW5lZEltcGFjdExhYmVsKTsKCiAgICAgICAgcmV0dXJuIFtjb21iaW5lZEltcGFjdE51bWJlci50b0ZpeGVkKDIpLCBjb21iaW5lZEltcGFjdExhYmVsXTsKICAgIH0KCiAgICAvL01BUCBZT1VSIEZVTkNUSU9OIFRPIEEgU1RSSU5HIE5BTUUgSEVSRToKICAgIHJldHVybiB7IGZ1bmNNYXA6IHsiZ2V0Q29tYmluZWRJbXBhY3QiOiBnZXRDb21iaW5lZEltcGFjdH0gfTsKCn0pKCk7CgoKLy8gVG8gaW1wb3J0IGEgc2NyaXB0LCBpdCBtdXN0IHVzZSBhIHNpbWlsYXIgc3RydWN0dXJlIHRvIHRoZSBleGFtcGxlIGNvZGUgYWJvdmUuIEl0IHNob3VsZCB0YWtlIHRoZSBmb3JtIG9mCi8vIGFuIGltbWVkaWF0ZWx5IGludm9rZWQgZnVuY3Rpb24gZXhwcmVzc2lvbjogaHR0cHM6Ly9kZXZlbG9wZXIubW96aWxsYS5vcmcvZW4tVVMvZG9jcy9HbG9zc2FyeS9JSUZFIHdoZXJlIHRoZQovLyBmdW5jdGlvbiByZXR1cm5zIGEgZnVuY3Rpb24gbWFwIGNhbGxlZCBmdW5jTWFwLgovLyAKLy8gZnVuY01hcCBzaG91bGQgaGF2ZSBzdHJpbmcga2V5cyBhbmQgZnVuY3Rpb24gdmFsdWVzLiBTdHJpbmcga2V5cyB3aWxsIGJlIHVzZWQgYnkgRXZhbHVhdGFibGUgRWxlbWVudHMKLy8gdG8gcGFzcyBpbnB1dHMgdG8gYW5kIHJlY2VpdmUgb3V0cHV0cyBmcm9tIHRoZSBmdW5jdGlvbnMuCi8vIAovLyBFYWNoIHNjcmlwdCBtYXkgZGVmaW5lIGFyYml0cmFyaWx5IG1hbnkgZnVuY3Rpb25zLCBzbyBsb25nIGFzIHRoZXkncmUgYWxsIGV4cG9zZWQgdmlhIGZ1bmNNYXAuCi8vIAovLyBGdW5jdGlvbiBpbnB1dHMgd2lsbCB0YWtlIHRoZSBmb3JtIG9mIGEgc2luZ2xlIGFycmF5IG9mIDxhbnk+IHZhbHVlcy4KLy8gRnVuY3Rpb25zIHNob3VsZCBsaWtld2lzZSByZXR1cm4gYW4gYXJyYXkgb2YgPGFueT4gdmFsdWVzLgovLyBNZWFuaW5nIGZvciBhcmd1bWVudHMgYW5kIHJldHVybiB2YWx1ZXMgaXMgZGV0ZXJtaW5lZCBieSB0aGVpciBvcmRlciBpbiB0aGUgYXJyYXku"
-      }
     }
   ],
   "runnableModels": [
@@ -100,42 +78,6 @@
           ],
           "outputs": [
             "2505ccde-4180-4528-91f6-2c57682cbc7c"
-          ]
-        },
-        {
-          "meta": {
-            "uuid": "420c35fb-526b-4112-b833-f8da75d64691",
-            "name": "Get Social Impact"
-          },
-          "evaluatableAsset": "9bd989ea-03b5-403b-a31d-e349fd578118",
-          "functionName": "getSocialImpact",
-          "inputs": [
-            "6b9c2bc9-fa7d-4068-bf8b-ea1168dd8980",
-            "8ced4be1-4151-43e9-b869-0ab4d3895c15",
-            "ccb9c26e-615d-4d35-bb7f-f97c7ee547fc",
-            "5a982da4-abe2-4eab-b93f-e15c9a5ba4bf",
-            "ee77ab3e-2fbe-42fb-a498-7c26773fa369",
-            "6b1ebd7b-d193-4651-8d70-64680d9c9e30"
-          ],
-          "outputs": [
-            "84620412-3746-4a83-a03c-a6c68fef30ca"
-          ]
-        },
-        {
-          "meta": {
-            "uuid": "5247084f-9ffb-412a-ac10-ec5c5a6b4afc",
-            "name": "Get Combined Impact"
-          },
-          "evaluatableAsset": "a7cd639e-8ce2-48ca-a60e-1911350c8014",
-          "functionName": "getCombinedImpact",
-          "inputs": [
-            "2505ccde-4180-4528-91f6-2c57682cbc7c",
-            "84620412-3746-4a83-a03c-a6c68fef30ca",
-            "79667f59-9e74-4544-9207-4d1a58b1396a"
-          ],
-          "outputs": [
-            "268c3c48-ff2b-4e95-a3c2-5d8fe9d9cddf",
-            "b0ba9497-ca65-4f71-8d37-dd256b5e9583"
           ]
         }
       ]
@@ -218,58 +160,6 @@
         "name": "IOVal: Total environmental impact"
       },
       "data": 0
-    },
-    {
-      "meta": {
-        "uuid": "5a982da4-abe2-4eab-b93f-e15c9a5ba4bf",
-        "name": "IOVal: Social income percent for FTBF coffee",
-        "summary": "The percent of Fair Trade, Bird Friendly coffee income that has a social impact (impacts workers/growers)"
-      },
-      "data": 10
-    },
-    {
-      "meta": {
-        "uuid": "ee77ab3e-2fbe-42fb-a498-7c26773fa369",
-        "name": "IOVal: Social income percent for regular coffee",
-        "summary": "The percent of regular coffee income that has a social impact (impacts workers/growers)"
-      },
-      "data": 1
-    },
-    {
-      "meta": {
-        "uuid": "6b1ebd7b-d193-4651-8d70-64680d9c9e30",
-        "name": "IOVal: Reference daily social impact income",
-        "summary": "The amount of income directed toward social impact needed for a social impact value of '1' in a period of 1 day. If this value is 0.25, and your choice results in $0.25 per day of revenue going toward social impact, your social impact value for the period will be 1."
-      },
-      "data": 0.25
-    },
-    {
-      "meta": {
-        "uuid": "84620412-3746-4a83-a03c-a6c68fef30ca",
-        "name": "IOVal: Total social impact"
-      },
-      "data": null
-    },
-    {
-      "meta": {
-        "uuid": "268c3c48-ff2b-4e95-a3c2-5d8fe9d9cddf",
-        "name": "IOVal: Total combined impact"
-      },
-      "data": null
-    },
-    {
-      "meta": {
-        "uuid": "b0ba9497-ca65-4f71-8d37-dd256b5e9583",
-        "name": "IOVal: Label for combined impact"
-      },
-      "data": ""
-    },
-    {
-      "meta": {
-        "uuid": "79667f59-9e74-4544-9207-4d1a58b1396a",
-        "name": "IOVal: Magnitude for non-neutral combined impact label"
-      },
-      "data": 0.25
     }
   ],
   "controls": [
@@ -344,63 +234,6 @@
       },
       "displays": ["47b17aa2-dfd5-4271-8601-d25af93b1a74"],
       "inputOutputValues": ["2505ccde-4180-4528-91f6-2c57682cbc7c"]
-    },
-    {
-      "meta": {
-        "uuid": "ab233d0e-a869-46b8-89c9-aa282351b1b4",
-        "name": "Control: Social income percent for FTBF coffee"
-      },
-      "displays": ["a1f842af-f749-4281-9637-ab14a8978ef0"],
-      "inputOutputValues": ["5a982da4-abe2-4eab-b93f-e15c9a5ba4bf"]
-    },
-    {
-      "meta": {
-        "uuid": "2658f39a-647d-4be3-9a86-557bdd0efe22",
-        "name": "Control: Social income percent for regular coffee"
-      },
-      "displays": ["bbb5fc63-bbb6-4df3-bded-9ca59724afda"],
-      "inputOutputValues": ["ee77ab3e-2fbe-42fb-a498-7c26773fa369"]
-    },
-    {
-      "meta": {
-        "uuid": "c8aab4b9-a305-4c3d-b2e5-5c9f80b4f20a",
-        "name": "Control: Impact on workers and growers (revenue, wages)"
-      },
-      "displays": ["caa78734-554e-416a-8e39-43be0b4ef031"],
-      "inputOutputValues": ["84620412-3746-4a83-a03c-a6c68fef30ca"]
-    },
-    {
-      "meta": {
-        "uuid": "bec94f8d-84a4-4c43-81fa-736bf8ab4a41",
-        "name": "Control: Reference daily social impact income",
-        "summary": "The amount of income directed toward social impact needed for a social impact value of '1' in a period of 1 day. If this value is 0.25, and your choice results in $0.25 per day of revenue going toward social impact, your social impact value for the period will be 1."
-      },
-      "displays": ["cf5064b0-4509-4679-890d-c6427926ade5"],
-      "inputOutputValues": ["6b1ebd7b-d193-4651-8d70-64680d9c9e30"]
-    },
-    {
-      "meta": {
-        "uuid": "7879a7d6-6d2b-4012-8db6-ada0eb5e2efc",
-        "name": "Control: Total combined impact"
-      },
-      "displays": ["df4a4882-5d75-4741-bfe7-6239e5ab7cc4"],
-      "inputOutputValues": ["268c3c48-ff2b-4e95-a3c2-5d8fe9d9cddf"]
-    },
-    {
-      "meta": {
-        "uuid": "18272444-137e-48bb-b907-48103fc4c8c7",
-        "name": "Control: Combined impact label"
-      },
-      "displays": ["a4ed68ec-33af-4e41-b60a-8b99717a3bef"],
-      "inputOutputValues": ["b0ba9497-ca65-4f71-8d37-dd256b5e9583"]
-    },
-    {
-      "meta": {
-        "uuid": "4dd6d964-53e2-4d30-971c-ab21b38f6f73",
-        "name": "Control: Magnitude for non-neutral impact label"
-      },
-      "displays": ["4a0a2201-5303-4ce1-997a-bd38aa94ff41"],
-      "inputOutputValues": ["79667f59-9e74-4544-9207-4d1a58b1396a"]
     }
   ],
   "diagrams": [
@@ -417,7 +250,7 @@
           },
           "causalType": "External",
           "position": {
-            "x": 440,
+            "x": 840,
             "y": 580
           },
           "displays": [
@@ -446,7 +279,7 @@
           },
           "causalType": "External",
           "position": {
-            "x": 100,
+            "x": 400,
             "y": 580
           },
           "displays": [
@@ -627,7 +460,7 @@
             },
             {
               "meta": {
-                "uuid": "df4a4882-5d75-4741-bfe7-6239e5ab7cc4",
+                "uuid": "a4ed68ec-33af-4e41-b60a-8b99717a3bef",
                 "name": "Raw total impact (number)"
               },
               "displayType": "controlText",
@@ -672,18 +505,18 @@
         {
           "meta": {
             "uuid": "d70e95e2-6976-4124-95d4-b9c2eef58eae",
-            "name": "Misc. Configuration"
+            "name": "Time Frame (Days)"
           },
           "causalType": "External",
           "position": {
-            "x": 1330,
-            "y": 75
+            "x": 30,
+            "y": 580
           },
           "displays": [
             {
               "meta": {
                 "uuid": "418a1e0e-75ff-44c6-9eb1-fe81cfe64dc7",
-                "name": "Decision time frame (Days)"
+                "name": "(days)"
               },
               "displayType": "controlRange",
               "content": {
@@ -692,103 +525,6 @@
                   "max": 30,
                   "step": 1,
                   "value": 7,
-                  "isInteractive": true
-                }
-              }
-            },
-            {
-              "meta": {
-                "uuid": "cbd5878f-d4e6-416b-b3cb-5bf6f885bf00",
-                "name": "Environmental Impact Rate: FTBF Coffee (impact per pound per day)"
-              },
-              "displayType": "controlRange",
-              "content": {
-                "controlParameters": {
-                  "min": 0,
-                  "max": 5,
-                  "step": 0.25,
-                  "value": 1,
-                  "isInteractive": true
-                }
-              }
-            },
-            {
-              "meta": {
-                "uuid": "9d2d4b3f-7319-40de-a2c0-2d10238d6686",
-                "name": "Environmental Impact Rate: Regular Coffee (impact per pound per day)"
-              },
-              "displayType": "controlRange",
-              "content": {
-                "controlParameters": {
-                  "min": 0,
-                  "max": 5,
-                  "step": 0.25,
-                  "value": 2.5,
-                  "isInteractive": true
-                }
-              }
-            },
-            {
-              "meta": {
-                "uuid": "a1f842af-f749-4281-9637-ab14a8978ef0",
-                "name": "Social income percent for FTBF coffee"
-              },
-              "displayType": "controlRange",
-              "content": {
-                "controlParameters": {
-                  "min": 0,
-                  "max": 100,
-                  "step": 1,
-                  "value": 10,
-                  "isInteractive": true
-                }
-              }
-            },
-            {
-              "meta": {
-                "uuid": "bbb5fc63-bbb6-4df3-bded-9ca59724afda",
-                "name": "Social income percent for regular coffee"
-              },
-              "displayType": "controlRange",
-              "content": {
-                "controlParameters": {
-                  "min": 0,
-                  "max": 100,
-                  "step": 1,
-                  "value": 1,
-                  "isInteractive": true
-                }
-              }
-            },
-            {
-              "meta": {
-                "uuid": "cf5064b0-4509-4679-890d-c6427926ade5",
-                "name": "Reference daily social impact income",
-                "summary": "The amount of income directed toward social impact needed for a social impact value of '1' in a period of 1 day. If this value is 0.25, and your choice results in $0.25 per day of revenue going toward social impact, your social impact value for the period will be 1."
-              },
-              "displayType": "controlRange",
-              "content": {
-                "controlParameters": {
-                  "min": 0.25,
-                  "max": 5,
-                  "step": 0.25,
-                  "value": 0.25,
-                  "isInteractive": true
-                }
-              }
-            },
-            {
-              "meta": {
-                "uuid": "4a0a2201-5303-4ce1-997a-bd38aa94ff41",
-                "name": "Magnitude for non-neutral impact label"
-              },
-              "displayType": "controlRange",
-              "content": {
-                "controlParameters": {
-                  "min": 0.01,
-                  "max": 1,
-                  "step": 0.01,
-                  "value": 0.1,
                   "isInteractive": true
                 }
               }

@@ -1,45 +1,9 @@
 import { useCallback, useState, useMemo } from "react";
-import graphData from "./model_json/strings_bools_multidisplays.json" assert {type: "json"};
+import graphData from "./model_json/coffee.json" assert {type: "json"};
 import Draggable from "react-draggable";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
 import Slider from "./components/Slider";
-
-// Note: This code is included in graphData, as a base64 encoded string.
-// 
-// function CodeForAdd() {
-//   (function () {
-//     const add = function (vals) {
-//       let sum = 0;
-//       vals.forEach((val) => {
-//         sum += val;
-//       });
-//       return [sum];
-//     };
-  
-//     return { funcMap: { "add": add } };
-//   })();
-// }
-
-// function test() {
-//   (function () {
-//       //Expects a boolean first, then an arbitrary-length list of strings
-//       //to combine. Boolean determines order.
-//       const combineStrings = function (vals) {
-//           console.log(vals);
-//           const reverseOrder = vals[0];
-//           vals = reverseOrder ? vals.slice(1).reverse() : vals.slice(1);
-//           console.log(vals);
-
-//           let outString = ""
-//           vals.forEach((val) => {
-//           outString += val;
-//           });
-//           return [outString];
-//       };
-    
-//       return { funcMap: { "combineStrings": combineStrings } };
-//   })();
-// }
+import { useCollapse } from "react-collapsed";
 
 // 
 //    ====IMPORTANT README====
@@ -244,16 +208,17 @@ function App() {
     if(elem.causalType !== null)
     {
       headerContent = <div>
-        <div style={{wordWrap: "break-word", width: "300px"}}>
+        <div style={{wordWrap: "break-word", width: "95%"}}>
           <label>{elem.meta.name ?? "Untitled Element"}</label>
-          <br></br>
-          <label>{elem.causalType}</label>
+          <div style={{height:"5px"}}></div>
+          <label style={{fontSize:"12px"}}>{elem.causalType}</label>
         </div>
-        <hr style={{border: "1px solid black", marginInline: "-5px"}}/>
       </div>
     }
 
-    let displayContents = elem.displays?.map((elemDisplay) => {
+    let nonInteractiveDisplays = new Array<JSX.Element>();
+    let displayContents = new Array<JSX.Element>();
+    elem.displays?.forEach((elemDisplay) => {
       let thisDisplay = <div></div>
       if(elemDisplay.displayType == "controlRange")
       {
@@ -297,13 +262,12 @@ function App() {
         else
         {
           textDisplay = <div style={{wordWrap: "break-word", width: "300px"}}>
-            <label>{computedIOValues.get(displayIOValuesList[0]) ?? elemDisplay.content.controlParameters?.value ?? ""}</label>
+            <label style={{backgroundColor:"#323232", paddingInline:"3px"}}>{computedIOValues.get(displayIOValuesList[0]) ?? elemDisplay.content.controlParameters?.value ?? ""}</label>
           </div>
         }
 
         const displayLabel = elemDisplay.meta.name ?
           <div>
-            <br></br>
             {elemDisplay.meta.name}
           </div>
           : null;
@@ -318,7 +282,6 @@ function App() {
         
         const displayLabel = elemDisplay.meta.name ?
           <div>
-            <br></br>
             {elemDisplay.meta.name}
           </div>
           : null;
@@ -341,13 +304,60 @@ function App() {
         </div>
         
       }
-      return thisDisplay;
+      if(elemDisplay.content.controlParameters?.isInteractive)
+      {
+        displayContents.push(thisDisplay);
+      }
+      else
+      {
+        nonInteractiveDisplays.push(thisDisplay);
+      }
+    });
+
+
+
+    const constructDisplaysSection = ((displaysList: (Array<JSX.Element>), expandByDefault = false) => {
+      if(displaysList.length > 0)
+      {
+        const [isExpanded, setExpanded] = useState((expandByDefault))
+        const { getCollapseProps, getToggleProps } = useCollapse({isExpanded});
+        
+        return(
+          <div>
+            <div style={{
+              display:"flex",
+              justifyContent:"center",
+              margin:"0px"
+            }}>
+              <button style={{
+                width:"100%",
+                fontSize:"8px",
+                borderRadius:"0px",
+                backgroundColor:"#4a4a4a",
+                color:"white",
+                border:"0px",
+                padding:"0px 0px"
+                }}{...getToggleProps({
+                  onClick: () => setExpanded((prevExpanded) => !prevExpanded)
+                })}>{displaysList !== undefined ? (isExpanded ? "-" : "+") : ""}</button>
+            </div>
+            <section {...getCollapseProps()}><div style={{
+              padding:"5px",
+              backgroundColor:"#3f46ab"
+            }}>{displaysList}</div></section>
+          </div>
+        )
+      }
+      return <div style={{height:"0px"}}></div>
     })
 
     //Construct inner content based on the diagram element's display contents
-    let innerContent = <div>
-      {headerContent ?? <div></div>}
-      {displayContents}
+    let innerContent = <div style={{margin:"0px", padding:"0px"}}>
+      <div style={{
+        padding:"5px"
+      }}>
+      {headerContent ?? <div></div>}</div>
+      
     </div>
     
     //Construct draggable outer shell and put inner content inside
@@ -364,7 +374,9 @@ function App() {
         <div
           id={elem.meta.uuid}
           style= {{
-            position: "absolute"
+            position: "absolute",
+            margin:"0px",
+            padding:"0px"
           }}
         >
           {/*Upper black handle for dragging the draggable element.*/}
@@ -373,8 +385,9 @@ function App() {
             style={{
               backgroundColor: "#000000",
               color: "#cccccc",
-              width: "314px",
-              height: "15px",
+              width: "300px",
+              border: "2px solid #000000",
+              height: "12px",
               cursor: "grab"
             }}
           ></div>
@@ -384,11 +397,13 @@ function App() {
               border: "2px solid #000000",
               backgroundColor: "#4f5af8",
               color: "#ffffff",
-              padding: "5px",
+              padding: "0px",
               width: "300px"
             }}
           >
             {innerContent}
+            {constructDisplaysSection(nonInteractiveDisplays, true)}
+            {constructDisplaysSection(displayContents, ["Lever", "External"].includes(elem.causalType) && displayContents.length < 3)}
           </div>
         </div>
       </Draggable>
