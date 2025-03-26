@@ -339,6 +339,22 @@
     },
     {
       "meta": {
+        "uuid": "2eb50363-a4de-4087-9bb1-f30f7c616485",
+        "name": "Control: Environmental impact rate for FTBF coffee"
+      },
+      "displays": ["cbd5878f-d4e6-416b-b3cb-5bf6f885bf00"],
+      "inputOutputValues": ["09d0e15a-db26-40ab-957c-1c8536eabe4d"]
+    },
+    {
+      "meta": {
+        "uuid": "d3214f94-6316-4a0e-89ff-b24c07f4174a",
+        "name": "Control: Environmental impact rate for regular coffee"
+      },
+      "displays": ["9d2d4b3f-7319-40de-a2c0-2d10238d6686"],
+      "inputOutputValues": ["8022af61-ddc7-44b0-9d33-235f851cca00"]
+    },
+    {
+      "meta": {
         "uuid": "7bc62757-df08-466b-bef3-308994e31e39",
         "name": "Control: Total environmental impact"
       },
