@@ -1,5 +1,5 @@
 import React from "react";
-import DisplayRenderer from "./DisplayRenderer";
+import DisplayTypeRegistry from "./DisplayTypeRegistry";
 import DisplaysSection from "./DisplaysSection";
 import Draggable from "react-draggable";
 
@@ -48,13 +48,18 @@ const DiagramElement: React.FC<DiagramElementProps> = ({
     let nonInteractiveDisplays = new Array<JSX.Element>();
     let displayContents = new Array<JSX.Element>();
     elementData.displays?.forEach((elemDisplay: any) => {
-      const displayJSX = <DisplayRenderer
-        display={elemDisplay}
+      const DisplayComponentType = DisplayTypeRegistry[elemDisplay.displayType ?? ""];
+      const displayJSX = DisplayComponentType ? (
+      <DisplayComponentType
+        displayJSON={elemDisplay}
         computedIOValues={computedIOValues}
         IOValues={IOValues}
         setIOValues={setIOValues}
         controlsMap={controlsMap}
       />
+      ) : (
+        <div style={{ color: "yellow" }}>Unsupported display type: {elemDisplay.displayType ?? "(none)"}</div>
+      )
 
       if(elemDisplay.content.controlParameters?.isInteractive)
       {
