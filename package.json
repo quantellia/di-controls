@@ -1,22 +1,31 @@
 {
-  "name": "di-controls-react",
+  "name": "authoring-tool",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --base=./",
+    "build": "vite build --base=/cdd-authoring-tool",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
-    "highcharts": "^11.4.1",
-    "highcharts-react-official": "^3.2.1",
+    "@canvasjs/react-charts": "^1.0.2",
+    "chart.js": "^4.4.2",
+    "color": "^4.2.3",
+    "d3": "^7.9.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-archer": "^4.4.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-collapsed": "^4.2.0",
+    "react-dom": "^18.2.0",
+    "react-draggable": "^4.4.6",
+    "react-xarrows": "^2.0.2"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
+    "@faker-js/faker": "^8.4.1",
+    "@types/color": "^3.0.6",
+    "@types/d3": "^7.4.3",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
