@@ -2,16 +2,33 @@ import React, { useState, useMemo, useEffect } from "react";
 import Xarrow, { useXarrow, Xwrapper } from "react-xarrows";
 import DiagramElement from "./DiagramElement";
 import { evaluateModel } from "../lib/evaluateModel"
+import { getIOMapFromModelJSON } from "../lib/getIOMapFromModelJSON";
+import { causalTypeColors } from "../lib/causalTypeColors";
 
 type CausalDecisionDiagramProps = {
     model: any;
+    setModelJSON: Function;
 }
 
 const CausalDecisionDiagram: React.FC<CausalDecisionDiagramProps> = ({
     model,
+    setModelJSON,
 }) => {
 
+    //Re-draws dependency arrows between elements
     const updateXarrow = useXarrow();
+    //Updates original JSON to change the position of a diagram element.
+    //Called on drag end for the element's draggable wrapper.
+    const handlePositionChange = (uuid: string, newPosition: any) => {
+        setModelJSON((prevModel: any) => {
+            const newModel = structuredClone(prevModel);
+            const diagramElement = newModel.diagrams[0].elements.find((e: any) => e.meta.uuid === uuid);
+            if(diagramElement) {
+                diagramElement.position = newPosition;
+            }
+            return newModel;
+        })
+    }
 
     //Evaluatable Assets: Import functions from their Base64-encoded string values
     const functionMap = useMemo(() => { //"<ScriptUUID>_<FunctionName>": function
@@ -32,27 +49,41 @@ const CausalDecisionDiagram: React.FC<CausalDecisionDiagramProps> = ({
         return funcMap;
     }, [model]);
 
-    //Construct a read-only lookup map for I/O values
-    //This creates a firewall between the simulation state of
-    //I/O values and the I/O values stored in JSON.
-    //Only reset the initial simulation state of the I/O values
-    //if the user has explicitly edited these in the JSON.
-    const initialIOValues = useMemo(() => {
-        const values = new Map();
-        model.inputOutputValues?.forEach((ioVal: any) => {
-            values.set(ioVal.meta.uuid, ioVal.data);
-        });
-        return values;
-    }, [model.inputOutputValues]);
+    //InitialIOValues is IMMUTABLE.
+    //Used to check whether incoming model JSON has an edited IO values list.
+    //We can't let React check this itself because it just checks refs. This is a value comparison.
+    const [initialIOValues, setInitialIOValues] = useState(() => getIOMapFromModelJSON(model));
+
+    useEffect(() => {
+        const incomingIOMap = getIOMapFromModelJSON(model);
+
+        const didIOValuesChange = () => {
+            if (incomingIOMap.size !== initialIOValues.size) return true;
+            for (const [key, value] of incomingIOMap) {
+                if (initialIOValues.get(key) !== value) return true;
+            }
+            return false;
+        };
+
+        if(didIOValuesChange())
+        {
+            setInitialIOValues(incomingIOMap);
+            setIOValues(incomingIOMap);
+        }
+        else
+        {
+            //IO Values did not change. DO NOT update our local copies.
+        }
+    }, [model])
 
     //Store mutable copy of initial I/O values here. When these are updated,
     //evaluate the model and store the computed I/O values in computedIOValues
     const [IOValues, setIOValues] = useState(initialIOValues);
 
-    //Reset IOValues when user has edited initial IO Values
+    //Update arrows when we get a new model JSON, in case positions were updated
     useEffect(() => {
-        setIOValues(initialIOValues);
-    }, [initialIOValues]);
+        updateXarrow();
+    }, [model])
 
     //Holds the results of evaluation runs.
     //Whenever I/O values or the underlying model (etc) change, re-evaluate the model.
@@ -84,6 +115,16 @@ const CausalDecisionDiagram: React.FC<CausalDecisionDiagramProps> = ({
         return controls;
     }, [model]);
 
+    //Maps diagram element UUIDs to their JSON information
+    //Currently only used to color dependency arrows based on their source element's causal type
+    const diagramElementMap = useMemo(() => {
+        const diaElems = new Map<string, any>();
+        model.diagrams[0].elements.forEach((elem: any) => {
+            diaElems.set(elem.meta.uuid, elem);
+        })
+        return diaElems;
+    }, [model])
+
     //Generate HTML for dependency arrows
     const dependencyArrows = model.diagrams[0].dependencies.map((dep: any) => (
         <Xarrow
@@ -92,6 +133,7 @@ const CausalDecisionDiagram: React.FC<CausalDecisionDiagramProps> = ({
         end={dep.target}
         strokeWidth={2}
         curveness={0.4}
+        color={causalTypeColors[diagramElementMap.get(dep.source).causalType] ?? causalTypeColors.Unknown}
         />
     ))
 
@@ -105,6 +147,7 @@ const CausalDecisionDiagram: React.FC<CausalDecisionDiagramProps> = ({
         setIOValues={setIOValues}
         controlsMap={controlsMap}
         updateXarrow={updateXarrow}
+        onPositionChange={handlePositionChange}
         />
     })
 

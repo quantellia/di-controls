@@ -2,6 +2,7 @@ import React from "react";
 import DisplayTypeRegistry from "./DisplayTypeRegistry";
 import DisplaysSection from "./DisplaysSection";
 import Draggable from "react-draggable";
+import { causalTypeColors } from "../lib/causalTypeColors";
 
 type DiagramElementProps = {
     elementData: any;
@@ -10,6 +11,7 @@ type DiagramElementProps = {
     setIOValues: React.Dispatch<React.SetStateAction<Map<string, any>>>;
     controlsMap: Map<string, string[]>;
     updateXarrow: () => void;
+    onPositionChange: Function;
   };
 
 /**
@@ -27,6 +29,7 @@ const DiagramElement: React.FC<DiagramElementProps> = ({
     setIOValues,
     controlsMap,
     updateXarrow,
+    onPositionChange,
   }) => {
 
     // Header shows basic element info like Name and Causal Type.
@@ -77,7 +80,7 @@ const DiagramElement: React.FC<DiagramElementProps> = ({
       <div
         style={{
           border: "2px solid #000000",
-          backgroundColor: "#4f5af8",
+          backgroundColor: causalTypeColors[elementData.causalType] ?? causalTypeColors.Unknown,
           color: "#ffffff",
           padding: "0px",
           width: "300px"
@@ -99,9 +102,11 @@ const DiagramElement: React.FC<DiagramElementProps> = ({
     return (
       <Draggable
         handle=".handle"
-        defaultPosition={elementData.position}
+        position={elementData.position}
         onDrag={updateXarrow}
-        onStop={updateXarrow}
+        onStop={(_, data) => {
+          onPositionChange?.(elementData.meta.uuid, {x: data.x, y: data.y})
+        }}
         key={"draggable-" + elementData.meta.uuid}
       >
         {/*Draggable supports only one child element. Wrap children one div.*/}

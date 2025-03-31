@@ -20,7 +20,8 @@
     "react-collapsed": "^4.2.0",
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.6",
-    "react-xarrows": "^2.0.2"
+    "react-xarrows": "^2.0.2",
+    "vanilla-jsoneditor": "^3.3.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
