@@ -1,3 +1,5 @@
+// Attribution: See note at bottom of file
+
 import Color from "color";
 import * as d3 from "d3";
 import {
@@ -798,3 +800,9 @@ export {
   DraggableGauge,
   DraggableTreeMap,
 };
+
+
+// NOTE: This React control is based on work in the di-controls-react repository by Quantellia (forked by OpenDI).
+// See repo here: https://github.com/opendi-org/di-react-controls
+// 
+// Used under the MIT License. See license here: https://github.com/opendi-org/di-react-controls?tab=MIT-1-ov-file
