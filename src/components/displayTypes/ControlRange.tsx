@@ -1,5 +1,5 @@
 import React from "react";
-import Slider from "../Slider";
+import Slider from "./interactivePieces/Slider";
 import { CommonDisplayProps } from "../DisplayTypeRegistry"
 
 const ControlRange: React.FC<CommonDisplayProps> = ({
